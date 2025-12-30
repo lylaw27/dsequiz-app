@@ -8,8 +8,8 @@ type ThemeName =
   | 'lavender-dark'
   | 'mint-light'
   | 'mint-dark'
-  | 'sky-light'
-  | 'sky-dark';
+  | 'quiz-light'
+  | 'quiz-dark';
 
 interface AppThemeContextType {
   currentTheme: string;
@@ -60,11 +60,11 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       case 'mint-dark':
         Uniwind.setTheme('mint-light');
         break;
-      case 'sky-light':
-        Uniwind.setTheme('sky-dark');
+      case 'quiz-light':
+        Uniwind.setTheme('quiz-dark');
         break;
-      case 'sky-dark':
-        Uniwind.setTheme('sky-light');
+      case 'quiz-dark':
+        Uniwind.setTheme('quiz-light');
         break;
     }
   }, [theme]);

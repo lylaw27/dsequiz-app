@@ -1,12 +1,12 @@
 @layer theme {
   :root {
-    @variant light {
+    @variant quiz-light {
       /* Base Colors - Warm beige/cream background inspired by quiz app */
-      --background: #F5EDE2;
+      --background: oklch(0.9494 0.017 76.11);
       --foreground: oklch(0.2 0.03 280);
 
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
-      --surface: #FFFFFF;
+      --surface: oklch(0.995 0.005 65);
       --surface-foreground: oklch(0.25 0.035 280);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
@@ -19,7 +19,7 @@
       --default-foreground: oklch(0.35 0.04 280);
 
       /* Accent: Vibrant blue for interactive elements */
-      --accent: #0D0B9D;
+      --accent: oklch(0.52 0.25 265);
       --accent-foreground: oklch(0.99 0.003 265);
 
       /* Form Field Defaults - Colors */
@@ -48,7 +48,7 @@
       --link: oklch(0.5 0.23 265);
     }
 
-    @variant dark {
+    @variant quiz-dark {
       /* Base Colors - Deep navy/purple dark mode */
       --background: oklch(0.12 0.04 280);
       --foreground: oklch(0.95 0.008 65);

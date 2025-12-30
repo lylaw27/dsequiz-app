@@ -13,5 +13,7 @@ module.exports = withUniwindConfig(config, {
     'mint-dark',
     'sky-light',
     'sky-dark',
+    'quiz-light',
+    'quiz-dark',
   ],
 });

@@ -2,8 +2,10 @@
 @import 'uniwind';
 @import 'heroui-native/styles';
 
+@import './themes/alpha.css';
 @import './themes/lavander.css';
 @import './themes/mint.css';
 @import './themes/sky.css';
+@import './themes/quiz.css';
 
 @source './node_modules/heroui-native/lib';

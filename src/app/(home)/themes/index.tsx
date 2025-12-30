@@ -54,10 +54,10 @@ const availableThemes: ThemeOption[] = [
     },
   },
   {
-    id: 'sky',
-    name: 'Sky',
-    lightVariant: 'sky-light',
-    darkVariant: 'sky-dark',
+    id: 'quiz',
+    name: 'Quiz',
+    lightVariant: 'quiz-light',
+    darkVariant: 'quiz-dark',
     colors: {
       primary: '#6CA9D6',
       secondary: '#64C9B2',
@@ -150,7 +150,7 @@ export default function Themes() {
     if (currentTheme === 'light' || currentTheme === 'dark') return 'default';
     if (currentTheme.startsWith('lavender')) return 'lavender';
     if (currentTheme.startsWith('mint')) return 'mint';
-    if (currentTheme.startsWith('sky')) return 'sky';
+    if (currentTheme.startsWith('quiz')) return 'quiz';
     return 'default';
   };
 
