@@ -3,8 +3,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Avatar, Button, Card, cn } from 'heroui-native';
-import type { FC } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useState, type FC } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
     Easing,
     FadeInDown,
@@ -18,6 +18,18 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const StyledFeather = withUniwind(Feather);
 const StyledIonicons = withUniwind(Ionicons);
 
+// API Configuration - update this with your backend URL
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
+type MCQSet = {
+  id: string;
+  topic: string;
+  description: string | null;
+  subject: string;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 type QuizData = {
   id: string;
   title: string;
@@ -29,138 +41,41 @@ type QuizData = {
   avatars: string[];
 };
 
-const quizzes: QuizData[] = [
-  {
-    id: '1',
-    title: 'Integers Quiz',
-    quizCount: 10,
-    icon: 'function-outline',
-    iconColor: '#6366f1',
-    iconBgColor: '#e0e7ff',
-    peopleJoined: 437,
+// Helper function to map MCQSet to QuizData
+const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
+  const colors = [
+    { icon: '#6366f1', bg: '#e0e7ff' },
+    { icon: '#ec4899', bg: '#fce7f3' },
+    { icon: '#10b981', bg: '#d1fae5' },
+    { icon: '#f59e0b', bg: '#fef3c7' },
+    { icon: '#8b5cf6', bg: '#ede9fe' },
+  ];
+  
+  const icons = [
+    'function-outline',
+    'help-circle-outline',
+    'bar-chart-outline',
+    'book-outline',
+    'school-outline',
+  ];
+
+  const colorIndex = index % colors.length;
+  const iconIndex = index % icons.length;
+
+  return {
+    id: mcqSet.id,
+    title: mcqSet.topic,
+    quizCount: 0, // Will be updated when we fetch detailed data
+    icon: icons[iconIndex],
+    iconColor: colors[colorIndex].icon,
+    iconBgColor: colors[colorIndex].bg,
+    peopleJoined: Math.floor(Math.random() * 500) + 100, // Placeholder
     avatars: [
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=1',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=2',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=3',
+      `https://img.heroui.chat/image/avatar?w=400&h=400&u=${index * 3 + 1}`,
+      `https://img.heroui.chat/image/avatar?w=400&h=400&u=${index * 3 + 2}`,
+      `https://img.heroui.chat/image/avatar?w=400&h=400&u=${index * 3 + 3}`,
     ],
-  },
-  {
-    id: '2',
-    title: 'General Knowledge',
-    quizCount: 6,
-    icon: 'help-circle-outline',
-    iconColor: '#ec4899',
-    iconBgColor: '#fce7f3',
-    peopleJoined: 437,
-    avatars: [
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=4',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=5',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=6',
-    ],
-  },
-  {
-    id: '3',
-    title: 'Statistics Math Quiz',
-    quizCount: 12,
-    icon: 'bar-chart-outline',
-    iconColor: '#6366f1',
-    iconBgColor: '#e0e7ff',
-    peopleJoined: 437,
-    avatars: [
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=7',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=8',
-      'https://img.heroui.chat/image/avatar?w=400&h=400&u=9',
-    ],
-  },
-];
-
-type QuizCardProps = QuizData & { index: number };
-
-const QuizCard: FC<QuizCardProps> = ({
-  title,
-  quizCount,
-  icon,
-  iconColor,
-  iconBgColor,
-  peopleJoined,
-  avatars,
-  index,
-}) => {
-  const { isDark } = useAppTheme();
-  const router = useRouter();
-
-  return (
-    <AnimatedPressable
-      entering={FadeInDown.duration(300)
-        .delay(index * 100)
-        .easing(Easing.out(Easing.ease))}
-      onPress={() => router.push('/quiz-question')}
-    >
-      <Card
-        className={cn(
-          'border border-zinc-200 bg-surface',
-          isDark && 'border-zinc-800'
-        )}
-      >
-        <View className="gap-4">
-          <Card.Body className="p-4">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center gap-3 flex-1">
-                <View
-                  className="size-14 rounded-2xl items-center justify-center"
-                  style={{
-                    backgroundColor: isDark ? iconColor + '33' : iconBgColor,
-                  }}
-                >
-                  <StyledIonicons
-                    name={icon as any}
-                    size={28}
-                    style={{ color: iconColor }}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Card.Title className="text-lg mb-1">{title}</Card.Title>
-                  <AppText className="text-muted text-sm">
-                    {quizCount} Quizzes
-                  </AppText>
-                </View>
-              </View>
-              <Button variant="ghost" size="sm">
-                <StyledIonicons
-                  name="bar-chart-outline"
-                  size={18}
-                  className="text-primary"
-                />
-                <Button.Label className="text-primary font-medium">
-                  Result
-                </Button.Label>
-              </Button>
-            </View>
-
-            <View className="flex-row items-center gap-3">
-              <View className="flex-row">
-                {avatars.map((avatar, idx) => (
-                  <View
-                    key={idx}
-                    className="border-2 border-background rounded-full"
-                    style={{ marginLeft: idx > 0 ? -10 : 0 }}
-                  >
-                    <Avatar size="sm" alt={`Avatar ${idx}`}>
-                      <Avatar.Image source={{ uri: avatar }} />
-                      <Avatar.Fallback />
-                    </Avatar>
-                  </View>
-                ))}
-              </View>
-              <AppText className="text-muted text-sm">
-                +{peopleJoined} People join
-              </AppText>
-            </View>
-          </Card.Body>
-        </View>
-      </Card>
-    </AnimatedPressable>
-  );
+  };
 };
 
 const FloatingActionButton: FC = () => {
@@ -238,6 +153,73 @@ const BottomNavigation: FC = () => {
 
 export default function QuizListPage() {
   const { isDark } = useAppTheme();
+  const [quizzes, setQuizzes] = useState<QuizData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchMCQSets();
+  }, []);
+
+  const fetchMCQSets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/mcqsets`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch MCQ sets');
+      }
+
+      const result = await response.json();
+      const mcqSets: MCQSet[] = result.data || [];
+      
+      // Map MCQ sets to quiz data
+      const mappedQuizzes = mcqSets.map((mcqSet, index) => 
+        mapMCQSetToQuizData(mcqSet, index)
+      );
+      
+      setQuizzes(mappedQuizzes);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching MCQ sets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <AppText className="text-muted mt-4">Loading quizzes...</AppText>
+        </View>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center px-5">
+          <StyledIonicons 
+            name="alert-circle-outline" 
+            size={64} 
+            className="text-muted mb-4"
+          />
+          <AppText className="text-lg font-semibold mb-2">Error Loading Quizzes</AppText>
+          <AppText className="text-muted text-center mb-4">{error}</AppText>
+          <Button onPress={fetchMCQSets}>
+            <Button.Label>Retry</Button.Label>
+          </Button>
+        </View>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -245,11 +227,25 @@ export default function QuizListPage() {
         <View className="px-5 pt-6 pb-4">
           <AppText className="text-4xl font-bold">Your Quizzes</AppText>
         </View>
-        <View className="gap-4 px-5">
-          {quizzes.map((quiz, index) => (
-            <QuizCard key={quiz.id} {...quiz} index={index} />
-          ))}
-        </View>
+        {quizzes.length === 0 ? (
+          <View className="items-center justify-center px-5 py-12">
+            <StyledIonicons 
+              name="folder-open-outline" 
+              size={64} 
+              className="text-muted mb-4"
+            />
+            <AppText className="text-lg font-semibold mb-2">No Quizzes Yet</AppText>
+            <AppText className="text-muted text-center">
+              Start by creating your first quiz!
+            </AppText>
+          </View>
+        ) : (
+          <View className="gap-4 px-5">
+            {quizzes.map((quiz, index) => (
+              <QuizCard key={quiz.id} {...quiz} index={index} />
+            ))}
+          </View>
+        )}
       </ScrollView>
       <FloatingActionButton />
       <BottomNavigation />
