@@ -78,6 +78,96 @@ const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
   };
 };
 
+type QuizCardProps = QuizData & { index: number };
+
+const QuizCard: FC<QuizCardProps> = ({
+  id,
+  title,
+  quizCount,
+  icon,
+  iconColor,
+  iconBgColor,
+  peopleJoined,
+  avatars,
+  index,
+}) => {
+  const { isDark } = useAppTheme();
+  const router = useRouter();
+
+  return (
+    <AnimatedPressable
+      entering={FadeInDown.duration(300)
+        .delay(index * 100)
+        .easing(Easing.out(Easing.ease))}
+      onPress={() => router.push(`/quiz/${id}`)}
+    >
+      <Card
+        className={cn(
+          'border border-zinc-200 bg-surface',
+          isDark && 'border-zinc-800'
+        )}
+      >
+        <View className="gap-4">
+          <Card.Body className="p-4">
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center gap-3 flex-1">
+                <View
+                  className="size-14 rounded-2xl items-center justify-center"
+                  style={{
+                    backgroundColor: isDark ? iconColor + '33' : iconBgColor,
+                  }}
+                >
+                  <StyledIonicons
+                    name={icon as any}
+                    size={28}
+                    style={{ color: iconColor }}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Card.Title className="text-lg mb-1">{title}</Card.Title>
+                  <AppText className="text-muted text-sm">
+                    {quizCount} Quizzes
+                  </AppText>
+                </View>
+              </View>
+              <Button variant="ghost" size="sm">
+                <StyledIonicons
+                  name="bar-chart-outline"
+                  size={18}
+                  className="text-primary"
+                />
+                <Button.Label className="text-primary font-medium">
+                  Result
+                </Button.Label>
+              </Button>
+            </View>
+
+            <View className="flex-row items-center gap-3">
+              <View className="flex-row">
+                {avatars.map((avatar, idx) => (
+                  <View
+                    key={idx}
+                    className="border-2 border-background rounded-full"
+                    style={{ marginLeft: idx > 0 ? -10 : 0 }}
+                  >
+                    <Avatar size="sm" alt={`Avatar ${idx}`}>
+                      <Avatar.Image source={{ uri: avatar }} />
+                      <Avatar.Fallback />
+                    </Avatar>
+                  </View>
+                ))}
+              </View>
+              <AppText className="text-muted text-sm">
+                +{peopleJoined} People join
+              </AppText>
+            </View>
+          </Card.Body>
+        </View>
+      </Card>
+    </AnimatedPressable>
+  );
+};
+
 const FloatingActionButton: FC = () => {
   const { isDark } = useAppTheme();
 
