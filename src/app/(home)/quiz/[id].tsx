@@ -6,9 +6,7 @@ import { useEffect, useState, type FC } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  withTiming,
+  FadeInDown
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
@@ -99,11 +97,11 @@ const AnswerCard: FC<AnswerCardProps> = ({
           !isAnswerConfirmed && !isSelected && isDark && 'border-zinc-800'
         )}
       >
-        <Card.Body className="p-4">
+        <Card.Body className="p-2">
           <View className="flex-row items-center gap-3">
             <AppText
               className={cn(
-                'text-lg font-semibold',
+                'text-base font-semibold',
                 isSelected ? 'text-foreground' : 'text-foreground/60'
               )}
             >
@@ -111,7 +109,7 @@ const AnswerCard: FC<AnswerCardProps> = ({
             </AppText>
             <AppText
               className={cn(
-                'text-lg flex-1',
+                'text-base flex-1',
                 isSelected ? 'text-foreground' : 'text-foreground/80'
               )}
             >
@@ -137,29 +135,40 @@ const AnswerCard: FC<AnswerCardProps> = ({
   );
 };
 
-const ProgressBar: FC<{ progress: number }> = ({ progress }) => {
+const ProgressBar: FC<{ 
+  currentIndex: number; 
+  totalQuestions: number;
+  answeredQuestions: Set<number>;
+  onNavigate: (index: number) => void;
+}> = ({ 
+  currentIndex, 
+  totalQuestions,
+  answeredQuestions,
+  onNavigate
+}) => {
   const { isDark } = useAppTheme();
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: withTiming(`${progress * 100}%`, {
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-      }),
-    };
-  });
-
   return (
-    <View
-      className={cn(
-        'h-2 rounded-full overflow-hidden',
-        isDark ? 'bg-zinc-800' : 'bg-zinc-200'
-      )}
-    >
-      <Animated.View
-        className="h-full bg-primary rounded-full"
-        style={animatedStyle}
-      />
+    <View className="flex-row gap-2">
+      {Array.from({ length: totalQuestions }).map((_, index) => {
+        const isAnswered = answeredQuestions.has(index);
+        const isCurrent = index === currentIndex;
+        
+        return (
+          <Pressable
+            key={index}
+            onPress={() => onNavigate(index)}
+            className={cn(
+              'h-2 flex-1 rounded-full',
+              isAnswered && !isCurrent && 'bg-accent/40',
+              isAnswered && !isCurrent && isDark && 'bg-accent/30',
+              isCurrent && 'bg-accent',
+              !isAnswered && !isCurrent && 'bg-zinc-200',
+              !isAnswered && !isCurrent && isDark && 'bg-zinc-800'
+            )}
+          />
+        );
+      })}
     </View>
   );
 };
@@ -175,6 +184,8 @@ export default function QuizDetailPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [userAnswers, setUserAnswers] = useState<Map<number, string>>(new Map());
 
   useEffect(() => {
     if (id) {
@@ -203,23 +214,90 @@ export default function QuizDetailPage() {
     }
   };
 
+  const findFirstUncompletedQuestion = (): number | null => {
+    if (!mcqSet) return null;
+    for (let i = 0; i < mcqSet.mcqset_questions.length; i++) {
+      if (!answeredQuestions.has(i)) {
+        return i;
+      }
+    }
+    return null;
+  };
+
   const handleNext = () => {
     if (!mcqSet) return;
 
     // First click: confirm answer and show result
     if (!isAnswerConfirmed) {
       setIsAnswerConfirmed(true);
+      setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex));
+      if (selectedAnswer) {
+        setUserAnswers(prev => new Map(prev).set(currentQuestionIndex, selectedAnswer));
+      }
       return;
     }
 
-    // Second click: move to next question
-    if (currentQuestionIndex < mcqSet.mcqset_questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setIsAnswerConfirmed(false);
-    } else {
-      // Quiz completed
-      router.back();
+    // Second click: find next uncompleted question (circular)
+    if (allQuestionsCompleted) {
+      // All questions completed, navigate to summary
+      navigateToSummary();
+      return;
+    }
+
+    // Find next uncompleted question (circular search)
+    let nextIndex = (currentQuestionIndex + 1) % mcqSet.mcqset_questions.length;
+    while (answeredQuestions.has(nextIndex)) {
+      nextIndex = (nextIndex + 1) % mcqSet.mcqset_questions.length;
+    }
+    navigateToQuestion(nextIndex);
+  };
+
+  const navigateToSummary = () => {
+    if (!mcqSet) return;
+
+    // Calculate results
+    let correctCount = 0;
+    const results = mcqSet.mcqset_questions.map((item, index) => {
+      const question = item.mcqs;
+      const userAnswer = userAnswers.get(index) || '';
+      const isCorrect = userAnswer === question.correct_answer;
+      if (isCorrect) correctCount++;
+
+      return {
+        questionIndex: index,
+        question: question.question,
+        userAnswer: userAnswer,
+        correctAnswer: question.correct_answer,
+        isCorrect,
+        subject: question.subject,
+      };
+    });
+
+    // Navigate to summary page with results
+    router.push({
+      pathname: '/(home)/quiz/summary',
+      params: {
+        topic: mcqSet.topic,
+        totalQuestions: mcqSet.mcqset_questions.length.toString(),
+        correctCount: correctCount.toString(),
+        results: JSON.stringify(results),
+      },
+    });
+  };
+
+  const handleSkip = () => {
+    if (!mcqSet || allQuestionsCompleted) return;
+    
+    // Find next uncompleted question (circular search)
+    let nextIndex = (currentQuestionIndex + 1) % mcqSet.mcqset_questions.length;
+    while (answeredQuestions.has(nextIndex)) {
+      nextIndex = (nextIndex + 1) % mcqSet.mcqset_questions.length;
+      // Safety check: if we've cycled back to current, break
+      if (nextIndex === currentQuestionIndex) break;
+    }
+    
+    if (nextIndex !== currentQuestionIndex) {
+      navigateToQuestion(nextIndex);
     }
   };
 
@@ -254,7 +332,20 @@ export default function QuizDetailPage() {
 
   const currentQuestion = mcqSet.mcqset_questions[currentQuestionIndex]?.mcqs;
   const totalQuestions = mcqSet.mcqset_questions.length;
-  const currentProgress = (currentQuestionIndex + 1) / totalQuestions;
+  const allQuestionsCompleted = answeredQuestions.size === totalQuestions;
+  
+  const navigateToQuestion = (index: number) => {
+    setCurrentQuestionIndex(index);
+    const savedAnswer = userAnswers.get(index);
+    if (savedAnswer) {
+      setSelectedAnswer(savedAnswer);
+      setIsAnswerConfirmed(true);
+    } else {
+      setSelectedAnswer(null);
+      setIsAnswerConfirmed(false);
+    }
+  };
+
 
   // Convert options object to Answer array
   const answers: Answer[] = currentQuestion ? Object.entries(currentQuestion.options).map(([key, value]) => ({
@@ -286,10 +377,15 @@ export default function QuizDetailPage() {
           </View>
           <View className="flex-row items-center justify-between mb-2">
             <AppText className="text-muted text-sm">
-              Question {currentQuestionIndex + 1} of {totalQuestions}
+              問題 {currentQuestionIndex + 1} / {totalQuestions}
             </AppText>
           </View>
-          <ProgressBar progress={currentProgress} />
+          <ProgressBar 
+            currentIndex={currentQuestionIndex} 
+            totalQuestions={totalQuestions}
+            answeredQuestions={answeredQuestions}
+            onNavigate={navigateToQuestion}
+          />
         </View>
 
         {/* Question Card */}
@@ -301,7 +397,7 @@ export default function QuizDetailPage() {
             >
               <Card
                 className={cn(
-                  'border border-zinc-200 bg-surface',
+                  'border border-zinc-200 bg-surface p-0',
                   isDark && 'border-zinc-800'
                 )}
               >
@@ -333,14 +429,14 @@ export default function QuizDetailPage() {
                         )}
                       >
                         <Chip.Label className="text-foreground/70">
-                          Difficulty: {currentQuestion.difficulty}
+                          難度: {currentQuestion.difficulty}
                         </Chip.Label>
                       </Chip>
                     )}
                   </View>
 
                   {/* Question */}
-                  <AppText className="text-2xl font-bold text-foreground/90 mb-8">
+                  <AppText className="text-xl font-bold text-foreground/90 mb-8">
                     {currentQuestion.question}
                   </AppText>
 
@@ -397,7 +493,7 @@ export default function QuizDetailPage() {
                           isDark && (isCorrect ? 'text-green-400' : 'text-red-400')
                         )}
                       >
-                        {isCorrect ? 'Correct!' : 'Incorrect'}
+                        {isCorrect ? '正確!' : '不正確'}
                       </AppText>
                     </View>
 
@@ -453,8 +549,9 @@ export default function QuizDetailPage() {
           </View>
         )}
 
-        {/* Next Button */}
+        {/* Action Buttons */}
         <View className="px-5 mt-8">
+          {/* Main Action Button */}
           <AnimatedPressable
             entering={FadeInDown.duration(400)
               .delay(300)
@@ -466,19 +563,40 @@ export default function QuizDetailPage() {
               disabled={!selectedAnswer}
               onPress={handleNext}
               className={cn(
-                'w-full',
+                'w-full rounded-2xl',
                 !selectedAnswer && 'opacity-50'
               )}
             >
               <Button.Label className="text-lg">
                 {!isAnswerConfirmed
-                  ? 'Check Answer'
-                  : currentQuestionIndex < totalQuestions - 1
-                  ? 'Continue'
-                  : 'Finish'}
+                  ? '檢查答案'
+                  : allQuestionsCompleted
+                  ? '完成'
+                  : '下一題'}
               </Button.Label>
             </Button>
           </AnimatedPressable>
+
+          {/* Skip Button - Only show when answer not confirmed and not all completed */}
+          {!isAnswerConfirmed && !allQuestionsCompleted && (
+            <View className="mt-3">
+              <AnimatedPressable
+                entering={FadeInDown.duration(400)
+                  .delay(200)
+                  .easing(Easing.out(Easing.ease))}
+              >
+                <Pressable
+                  onPress={handleSkip}
+                  className={cn(
+                    'w-full h-12 rounded-2xl items-center justify-center',
+                    isDark ? 'bg-zinc-800' : 'bg-zinc-200'
+                  )}
+                >
+                  <AppText className="text-base font-semibold">跳過</AppText>
+                </Pressable>
+              </AnimatedPressable>
+            </View>
+          )}
         </View>
       </ScrollView>
       <StatusBar style={isDark ? 'light' : 'dark'} />
