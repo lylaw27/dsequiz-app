@@ -68,6 +68,7 @@ export default function Layout() {
           contentStyle: {
             backgroundColor: themeColorBackground,
           },
+          headerShown: false,
         }}
       >
         <Stack.Screen
