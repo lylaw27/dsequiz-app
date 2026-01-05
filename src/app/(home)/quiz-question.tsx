@@ -6,9 +6,7 @@ import { useState, type FC } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  withTiming,
+  FadeInDown
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
@@ -98,29 +96,35 @@ const AnswerCard: FC<AnswerCardProps> = ({
   );
 };
 
-const ProgressBar: FC<{ progress: number }> = ({ progress }) => {
+const ProgressBar: FC<{ currentQuestion: number; totalQuestions: number }> = ({
+  currentQuestion,
+  totalQuestions,
+}) => {
   const { isDark } = useAppTheme();
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: withTiming(`${progress * 100}%`, {
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-      }),
-    };
-  });
-
   return (
-    <View
-      className={cn(
-        'h-2 rounded-full overflow-hidden',
-        isDark ? 'bg-zinc-800' : 'bg-zinc-200'
-      )}
-    >
-      <Animated.View
-        className="h-full bg-primary rounded-full"
-        style={animatedStyle}
-      />
+    <View className="flex-row gap-2">
+      {Array.from({ length: totalQuestions }).map((_, index) => {
+        const questionNumber = index + 1;
+        const isCompleted = questionNumber < currentQuestion;
+        const isCurrent = questionNumber === currentQuestion;
+        const isUpcoming = questionNumber > currentQuestion;
+
+        return (
+          <Animated.View
+            key={index}
+            entering={FadeInDown.duration(300)
+              .delay(index * 40)
+              .easing(Easing.out(Easing.ease))}
+            className={cn(
+              'flex-1 h-2 rounded-full',
+              isCurrent && 'bg-primary',
+              isCompleted && (isDark ? 'bg-primary/40' : 'bg-primary/30'),
+              isUpcoming && (isDark ? 'bg-zinc-800' : 'bg-zinc-200')
+            )}
+          />
+        );
+      })}
     </View>
   );
 };
@@ -129,7 +133,8 @@ export default function QuizQuestionPage() {
   const { isDark } = useAppTheme();
   const router = useRouter();
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [currentProgress] = useState(0.1); // 1 out of 10 questions
+  const [currentQuestion] = useState(1); // Current question number (1-indexed)
+  const [totalQuestions] = useState(10); // Total number of questions
 
   const handleNext = () => {
     // Navigate to next question or results
@@ -156,7 +161,7 @@ export default function QuizQuestionPage() {
               <StyledFeather name="x" size={24} className="text-foreground" />
             </Pressable>
           </View>
-          <ProgressBar progress={currentProgress} />
+          <ProgressBar currentQuestion={currentQuestion} totalQuestions={totalQuestions} />
         </View>
 
         {/* Question Card */}
