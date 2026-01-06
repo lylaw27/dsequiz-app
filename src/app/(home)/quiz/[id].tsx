@@ -29,11 +29,17 @@ type MCQ = {
   explanation: string;
   grade_level: string | null;
   difficulty: number | null;
+  question_types: QuestionType
 };
 
 type MCQSetQuestion = {
   order_index: number;
   mcqs: MCQ;
+};
+
+type QuestionType = {
+  id: string;
+  name: string;
 };
 
 type MCQSetDetail = {
@@ -205,6 +211,7 @@ export default function QuizDetailPage() {
       }
 
       const result = await response.json();
+      console.log('Fetched MCQ Set:', result);
       setMcqSet(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -403,7 +410,7 @@ export default function QuizDetailPage() {
               >
                 <Card.Body className="p-5">
                   {/* Category and Difficulty */}
-                  <View className="flex-row items-center gap-3 mb-6">
+                  <View className="flex-row flex-wrap items-center gap-3 mb-6">
                     <Chip
                       size="md"
                       className={cn(
@@ -420,7 +427,7 @@ export default function QuizDetailPage() {
                         {currentQuestion.subject}
                       </Chip.Label>
                     </Chip>
-                    {currentQuestion.difficulty && (
+                    {currentQuestion.question_types && (
                       <Chip
                         size="md"
                         className={cn(
@@ -429,7 +436,7 @@ export default function QuizDetailPage() {
                         )}
                       >
                         <Chip.Label className="text-foreground/70">
-                          難度: {currentQuestion.difficulty}
+                          {currentQuestion.question_types.name}
                         </Chip.Label>
                       </Chip>
                     )}

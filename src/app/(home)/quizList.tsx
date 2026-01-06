@@ -6,8 +6,8 @@ import { Avatar, Button, Card, cn } from 'heroui-native';
 import { useEffect, useState, type FC } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
-    Easing,
-    FadeInDown,
+  Easing,
+  FadeInDown,
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
@@ -108,8 +108,8 @@ const QuizCard: FC<QuizCardProps> = ({
         )}
       >
         <View className="gap-4">
-          <Card.Body className="p-4">
-            <View className="flex-row items-center justify-between mb-4">
+          <Card.Body>
+            <View className="flex-row items-center justify-between mb-4 border-2 rounded-2xl p-2 border-surface-foreground">
               <View className="flex-row items-center gap-3 flex-1">
                 <View
                   className="size-14 rounded-2xl items-center justify-center"

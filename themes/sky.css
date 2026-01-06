@@ -7,7 +7,7 @@
 
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
       --surface: oklch(0.98 0.01 230);
-      --surface-foreground: oklch(0.3 0.05 230);
+      --surface-foreground: oklch(0.9567 0.0174 289.61);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
       --overlay: oklch(0.998 0.005 230);
