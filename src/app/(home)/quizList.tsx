@@ -3,6 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Avatar, Button, Card, cn } from 'heroui-native';
+import LottieView from 'lottie-react-native';
 import { useEffect, useState, type FC } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
@@ -25,6 +26,7 @@ type MCQSet = {
   id: string;
   topic: string;
   description: string | null;
+  count: number;
   subject: string;
   created_at: string | null;
   updated_at: string | null;
@@ -65,7 +67,7 @@ const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
   return {
     id: mcqSet.id,
     title: mcqSet.topic,
-    quizCount: 0, // Will be updated when we fetch detailed data
+    quizCount: mcqSet.count, // Will be updated when we fetch detailed data
     icon: icons[iconIndex],
     iconColor: colors[colorIndex].icon,
     iconBgColor: colors[colorIndex].bg,
@@ -126,11 +128,11 @@ const QuizCard: FC<QuizCardProps> = ({
                 <View className="flex-1">
                   <Card.Title className="text-lg mb-1">{title}</Card.Title>
                   <AppText className="text-muted text-sm">
-                    {quizCount} Quizzes
+                    {quizCount} 個題目
                   </AppText>
                 </View>
               </View>
-              <Button variant="ghost" size="sm">
+              {/* <Button variant="ghost" size="sm">
                 <StyledIonicons
                   name="bar-chart-outline"
                   size={18}
@@ -139,7 +141,26 @@ const QuizCard: FC<QuizCardProps> = ({
                 <Button.Label className="text-primary font-medium">
                   Result
                 </Button.Label>
-              </Button>
+              </Button> */}
+              {/* Timer */}
+              <View>
+                <View className='text-sm'>
+                  刷新時間
+                </View>
+                <View className='flex-row items-center gap-1'>
+                  <View className='w-6 h-6'>
+                    <LottieView
+                      autoPlay
+                      loop
+                      speed={2}
+                      // Find more Lottie files at https://lottiefiles.com/featured
+                      source={require('@/assets/timer.json')}
+                    />
+                  </View>
+                  {/* <ClockIcon/> */}
+                  <View className='text-sm text-muted'>15小時10分鐘</View>
+                </View>
+              </View>
             </View>
 
             <View className="flex-row items-center gap-3">
@@ -158,7 +179,7 @@ const QuizCard: FC<QuizCardProps> = ({
                 ))}
               </View>
               <AppText className="text-muted text-sm">
-                +{peopleJoined} People join
+                +{peopleJoined}人 已完成
               </AppText>
             </View>
           </Card.Body>
