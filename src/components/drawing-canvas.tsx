@@ -1,6 +1,7 @@
 import { FC, useCallback, useState } from 'react';
 import { Modal, Pressable, View } from 'react-native';
-import { Canvas, Path, Skia, TouchInfo, useTouchHandler } from '@shopify/react-native-skia';
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Button } from 'heroui-native';
 import Feather from '@expo/vector-icons/Feather';
 import { withUniwind } from 'uniwind';
@@ -39,26 +40,25 @@ export const DrawingCanvas: FC<DrawingCanvasProps> = ({ visible, onClose }) => {
 
   const strokeWidths = [1, 3, 5, 8];
 
-  const onTouchHandler = useTouchHandler({
-    onStart: (touchInfo: TouchInfo) => {
+  const pan = Gesture.Pan()
+    .onStart((e) => {
       const newPath = Skia.Path.Make();
-      newPath.moveTo(touchInfo.x, touchInfo.y);
+      newPath.moveTo(e.x, e.y);
       setPaths((prevPaths) => [
         ...prevPaths,
         { path: newPath, color: currentColor, strokeWidth },
       ]);
-    },
-    onActive: (touchInfo: TouchInfo) => {
+    })
+    .onUpdate((e) => {
       setPaths((prevPaths) => {
         const updatedPaths = [...prevPaths];
         const currentPath = updatedPaths[updatedPaths.length - 1];
         if (currentPath) {
-          currentPath.path.lineTo(touchInfo.x, touchInfo.y);
+          currentPath.path.lineTo(e.x, e.y);
         }
         return updatedPaths;
       });
-    },
-  });
+    });
 
   const handleClear = useCallback(() => {
     setPaths([]);
@@ -154,21 +154,23 @@ export const DrawingCanvas: FC<DrawingCanvasProps> = ({ visible, onClose }) => {
         </View>
 
         {/* Canvas */}
-        <View className="flex-1 bg-white">
-          <Canvas style={{ flex: 1 }} onTouch={onTouchHandler}>
-            {paths.map((pathData, index) => (
-              <Path
-                key={index}
-                path={pathData.path}
-                color={pathData.color}
-                style="stroke"
-                strokeWidth={pathData.strokeWidth}
-                strokeCap="round"
-                strokeJoin="round"
-              />
-            ))}
-          </Canvas>
-        </View>
+        <GestureDetector gesture={pan}>
+          <View className="flex-1 bg-white">
+            <Canvas style={{ flex: 1 }}>
+              {paths.map((pathData, index) => (
+                <Path
+                  key={index}
+                  path={pathData.path}
+                  color={pathData.color}
+                  style="stroke"
+                  strokeWidth={pathData.strokeWidth}
+                  strokeCap="round"
+                  strokeJoin="round"
+                />
+              ))}
+            </Canvas>
+          </View>
+        </GestureDetector>
       </View>
     </Modal>
   );
