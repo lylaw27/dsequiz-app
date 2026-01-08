@@ -3,8 +3,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Avatar, Button, Card, cn } from 'heroui-native';
-import LottieView from 'lottie-react-native';
-import { useEffect, useState, type FC } from 'react';
+// import LottieView from 'lottie-react-native';
+import react from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   Easing,
@@ -82,7 +82,7 @@ const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
 
 type QuizCardProps = QuizData & { index: number };
 
-const QuizCard: FC<QuizCardProps> = ({
+const QuizCard: react.FC<QuizCardProps> = ({
   id,
   title,
   quizCount,
@@ -105,13 +105,13 @@ const QuizCard: FC<QuizCardProps> = ({
     >
       <Card
         className={cn(
-          'border border-zinc-200 bg-surface',
+          'border border-zinc-200 bg-surface p-3',
           isDark && 'border-zinc-800'
         )}
       >
         <View className="gap-4">
           <Card.Body>
-            <View className="flex-row items-center justify-between mb-4 border-2 rounded-2xl p-2 border-surface-foreground">
+            <View className="flex-row items-center justify-between mb-2 border-2 rounded-2xl p-2 border-surface-foreground">
               <View className="flex-row items-center gap-3 flex-1">
                 <View
                   className="size-14 rounded-2xl items-center justify-center"
@@ -144,23 +144,26 @@ const QuizCard: FC<QuizCardProps> = ({
               </Button> */}
               {/* Timer */}
               <View>
-                <View className='text-sm'>
-                  刷新時間
-                </View>
+
                 <View className='flex-row items-center gap-1'>
-                  <View className='w-6 h-6'>
-                    <LottieView
+                  {/* <View className='w-6 h-6'> */}
+                    {/* <LottieView
                       autoPlay
                       loop
                       speed={2}
                       // Find more Lottie files at https://lottiefiles.com/featured
                       source={require('@/assets/timer.json')}
-                    />
-                  </View>
+                    /> */}
+                    <Ionicons name="time-outline" size={20} color="#666878" />
+                  {/* </View> */}
                   {/* <ClockIcon/> */}
-                  <View className='text-sm text-muted'>15小時10分鐘</View>
+                  <AppText className='text-sm text-muted'>5分鐘</AppText>
                 </View>
+                <AppText className='text-sm text-muted text-right'>
+                  難度 3~5級
+                </AppText>
               </View>
+              
             </View>
 
             <View className="flex-row items-center gap-3">
@@ -169,7 +172,7 @@ const QuizCard: FC<QuizCardProps> = ({
                   <View
                     key={idx}
                     className="border-2 border-background rounded-full"
-                    style={{ marginLeft: idx > 0 ? -10 : 0 }}
+                    style={{ marginLeft: idx > 0 ? -20 : 0 }}
                   >
                     <Avatar size="sm" alt={`Avatar ${idx}`}>
                       <Avatar.Image source={{ uri: avatar }} />
@@ -189,7 +192,7 @@ const QuizCard: FC<QuizCardProps> = ({
   );
 };
 
-const FloatingActionButton: FC = () => {
+const FloatingActionButton: react.FC = () => {
   const { isDark } = useAppTheme();
 
   return (
@@ -210,7 +213,7 @@ const FloatingActionButton: FC = () => {
   );
 };
 
-const BottomNavigation: FC = () => {
+const BottomNavigation: react.FC = () => {
   const { isDark } = useAppTheme();
 
   return (
@@ -264,11 +267,11 @@ const BottomNavigation: FC = () => {
 
 export default function QuizListPage() {
   const { isDark } = useAppTheme();
-  const [quizzes, setQuizzes] = useState<QuizData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [quizzes, setQuizzes] = react.useState<QuizData[]>([]);
+  const [loading, setLoading] = react.useState(true);
+  const [error, setError] = react.useState<string | null>(null);
 
-  useEffect(() => {
+  react.useEffect(() => {
     fetchMCQSets();
   }, []);
 
@@ -336,7 +339,10 @@ export default function QuizListPage() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         <View className="px-5 pt-6 pb-4">
-          <AppText className="text-4xl font-bold">Your Quizzes</AppText>
+          <AppText className="text-3xl font-bold">DSE中文12篇範文</AppText>
+        </View>
+        <View className="px-5 pb-4">
+          <AppText className="text-muted">*題目將於 00:00 準時刷新</AppText>
         </View>
         {quizzes.length === 0 ? (
           <View className="items-center justify-center px-5 py-12">

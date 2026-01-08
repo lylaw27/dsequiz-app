@@ -11,6 +11,7 @@ import Animated, {
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
 import { SafeAreaView } from '../../../components/safe-area-view';
+import { DrawingCanvas } from '../../../components/drawing-canvas';
 import { useAppTheme } from '../../../contexts/app-theme-context';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -103,7 +104,7 @@ const AnswerCard: FC<AnswerCardProps> = ({
           !isAnswerConfirmed && !isSelected && isDark && 'border-zinc-800'
         )}
       >
-        <Card.Body className="p-2">
+        <Card.Body className="p-0">
           <View className="flex-row items-center gap-3">
             <AppText
               className={cn(
@@ -192,6 +193,7 @@ export default function QuizDetailPage() {
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [userAnswers, setUserAnswers] = useState<Map<number, string>>(new Map());
+  const [isDrawingCanvasVisible, setIsDrawingCanvasVisible] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -371,15 +373,28 @@ export default function QuizDetailPage() {
       >
         {/* Header */}
         <View className="px-5 pt-4 pb-6">
-          <View className="flex-row items-center justify-between mb-6">
-            <AppText className="text-3xl font-bold flex-1">
-              {mcqSet.topic}
-            </AppText>
+          <View className="flex-row items-center mb-6">
+            {/* Left: Back Button */}
             <Pressable
               onPress={() => router.back()}
               className="size-12 rounded-2xl bg-surface items-center justify-center"
             >
-              <StyledFeather name="x" size={24} className="text-foreground" />
+              <StyledFeather name="chevron-left" size={24} className="text-foreground" />
+            </Pressable>
+            
+            {/* Center: Topic */}
+            <View className="flex-1 items-center px-3">
+              <AppText className="text-2xl font-bold text-center">
+                {mcqSet.topic}
+              </AppText>
+            </View>
+            
+            {/* Right: Sketch Button */}
+            <Pressable
+              onPress={() => setIsDrawingCanvasVisible(true)}
+              className="size-12 rounded-2xl bg-surface items-center justify-center"
+            >
+              <StyledFeather name="edit-3" size={24} className="text-foreground" />
             </Pressable>
           </View>
           <View className="flex-row items-center justify-between mb-2">
@@ -557,55 +572,62 @@ export default function QuizDetailPage() {
         )}
 
         {/* Action Buttons */}
-        <View className="px-5 mt-8">
-          {/* Main Action Button */}
-          <AnimatedPressable
-            entering={FadeInDown.duration(400)
-              .delay(300)
-              .easing(Easing.out(Easing.ease))}
-          >
-            <Button
-              size="lg"
-              variant="primary"
-              disabled={!selectedAnswer}
-              onPress={handleNext}
-              className={cn(
-                'w-full rounded-2xl',
-                !selectedAnswer && 'opacity-50'
-              )}
+        <View className="px-5 mt-4">
+          <View className="flex-row gap-3">
+            {/* Main Action Button */}
+            <AnimatedPressable
+              entering={FadeInDown.duration(400)
+                .delay(300)
+                .easing(Easing.out(Easing.ease))}
+              // style={{ width: !isAnswerConfirmed && !allQuestionsCompleted ? '70%' : '100%' }}
             >
-              <Button.Label className="text-lg">
-                {!isAnswerConfirmed
-                  ? '檢查答案'
-                  : allQuestionsCompleted
-                  ? '完成'
-                  : '下一題'}
-              </Button.Label>
-            </Button>
-          </AnimatedPressable>
+              <Button
+                size="lg"
+                variant="primary"
+                disabled={!selectedAnswer}
+                onPress={handleNext}
+                className={cn(
+                  'rounded-2xl',
+                  !selectedAnswer && 'opacity-50'
+                )}
+              >
+                <Button.Label className="text-lg">
+                  {!isAnswerConfirmed
+                    ? '確認'
+                    : allQuestionsCompleted
+                    ? '完成'
+                    : '下一題'}
+                </Button.Label>
+              </Button>
+            </AnimatedPressable>
 
-          {/* Skip Button - Only show when answer not confirmed and not all completed */}
-          {!isAnswerConfirmed && !allQuestionsCompleted && (
-            <View className="mt-3">
+            {/* Skip Button - Only show when answer not confirmed and not all completed */}
+            {!isAnswerConfirmed && !allQuestionsCompleted && (
               <AnimatedPressable
                 entering={FadeInDown.duration(400)
                   .delay(200)
                   .easing(Easing.out(Easing.ease))}
+                style={{ width: '25%' }}
               >
-                <Pressable
+                <Button
+                  size="lg"
                   onPress={handleSkip}
                   className={cn(
-                    'w-full h-12 rounded-2xl items-center justify-center',
+                    'rounded-2xl items-center justify-center',
                     isDark ? 'bg-zinc-800' : 'bg-zinc-200'
                   )}
                 >
-                  <AppText className="text-base font-semibold">跳過</AppText>
-                </Pressable>
+                  <AppText className="text-lg font-semibold">跳過</AppText>
+                </Button>
               </AnimatedPressable>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </ScrollView>
+      <DrawingCanvas
+        visible={isDrawingCanvasVisible}
+        onClose={() => setIsDrawingCanvasVisible(false)}
+      />
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </SafeAreaView>
   );
