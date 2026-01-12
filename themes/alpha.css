@@ -19,7 +19,7 @@
       --default-foreground: oklch(0.35 0.04 280);
 
       /* Accent: Vibrant blue for interactive elements */
-      --accent: #0D0B9D;
+      --accent: blue;
       --accent-foreground: oklch(0.99 0.003 265);
 
       /* Form Field Defaults - Colors */

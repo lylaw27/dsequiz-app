@@ -1,28 +1,21 @@
-import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Avatar, Button, Card, cn } from 'heroui-native';
-// import LottieView from 'lottie-react-native';
+import { Button } from 'heroui-native';
 import react from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import Animated, {
-  Easing,
-  FadeInDown,
-} from 'react-native-reanimated';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
 import { SafeAreaView } from '../../components/safe-area-view';
+import { BottomNavigation } from '../../components/bottom-navigation';
 import { useAppTheme } from '../../contexts/app-theme-context';
+import { QuizCard, QuizData } from './components/QuizCard';
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const StyledFeather = withUniwind(Feather);
 const StyledIonicons = withUniwind(Ionicons);
 
 // API Configuration - update this with your backend URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
-type MCQSet = {
+export type MCQSet = {
   id: string;
   topic: string;
   description: string | null;
@@ -32,19 +25,8 @@ type MCQSet = {
   updated_at: string | null;
 };
 
-type QuizData = {
-  id: string;
-  title: string;
-  quizCount: number;
-  icon: string;
-  iconColor: string;
-  iconBgColor: string;
-  peopleJoined: number;
-  avatars: string[];
-};
-
 // Helper function to map MCQSet to QuizData
-const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
+export const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
   const colors = [
     { icon: '#6366f1', bg: '#e0e7ff' },
     { icon: '#ec4899', bg: '#fce7f3' },
@@ -78,191 +60,6 @@ const mapMCQSetToQuizData = (mcqSet: MCQSet, index: number): QuizData => {
       `https://img.heroui.chat/image/avatar?w=400&h=400&u=${index * 3 + 3}`,
     ],
   };
-};
-
-type QuizCardProps = QuizData & { index: number };
-
-const QuizCard: react.FC<QuizCardProps> = ({
-  id,
-  title,
-  quizCount,
-  icon,
-  iconColor,
-  iconBgColor,
-  peopleJoined,
-  avatars,
-  index,
-}) => {
-  const { isDark } = useAppTheme();
-  const router = useRouter();
-
-  return (
-    <AnimatedPressable
-      entering={FadeInDown.duration(300)
-        .delay(index * 100)
-        .easing(Easing.out(Easing.ease))}
-      onPress={() => router.push(`/quiz/${id}`)}
-    >
-      <Card
-        className={cn(
-          'border border-zinc-200 bg-surface p-3',
-          isDark && 'border-zinc-800'
-        )}
-      >
-        <View className="gap-4">
-          <Card.Body>
-            <View className="flex-row items-center justify-between mb-2 border-2 rounded-2xl p-2 border-surface-foreground">
-              <View className="flex-row items-center gap-3 flex-1">
-                <View
-                  className="size-14 rounded-2xl items-center justify-center"
-                  style={{
-                    backgroundColor: isDark ? iconColor + '33' : iconBgColor,
-                  }}
-                >
-                  <StyledIonicons
-                    name={icon as any}
-                    size={28}
-                    style={{ color: iconColor }}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Card.Title className="text-lg mb-1">{title}</Card.Title>
-                  <AppText className="text-muted text-sm">
-                    {quizCount} 個題目
-                  </AppText>
-                </View>
-              </View>
-              {/* <Button variant="ghost" size="sm">
-                <StyledIonicons
-                  name="bar-chart-outline"
-                  size={18}
-                  className="text-primary"
-                />
-                <Button.Label className="text-primary font-medium">
-                  Result
-                </Button.Label>
-              </Button> */}
-              {/* Timer */}
-              <View>
-
-                <View className='flex-row items-center gap-1'>
-                  {/* <View className='w-6 h-6'> */}
-                    {/* <LottieView
-                      autoPlay
-                      loop
-                      speed={2}
-                      // Find more Lottie files at https://lottiefiles.com/featured
-                      source={require('@/assets/timer.json')}
-                    /> */}
-                    <Ionicons name="time-outline" size={20} color="#666878" />
-                  {/* </View> */}
-                  {/* <ClockIcon/> */}
-                  <AppText className='text-sm text-muted'>5分鐘</AppText>
-                </View>
-                <AppText className='text-sm text-muted text-right'>
-                  難度 3~5級
-                </AppText>
-              </View>
-              
-            </View>
-
-            <View className="flex-row items-center gap-3">
-              <View className="flex-row">
-                {avatars.map((avatar, idx) => (
-                  <View
-                    key={idx}
-                    className="border-2 border-background rounded-full"
-                    style={{ marginLeft: idx > 0 ? -20 : 0 }}
-                  >
-                    <Avatar size="sm" alt={`Avatar ${idx}`}>
-                      <Avatar.Image source={{ uri: avatar }} />
-                      <Avatar.Fallback />
-                    </Avatar>
-                  </View>
-                ))}
-              </View>
-              <AppText className="text-muted text-sm">
-                +{peopleJoined}人 已完成
-              </AppText>
-            </View>
-          </Card.Body>
-        </View>
-      </Card>
-    </AnimatedPressable>
-  );
-};
-
-const FloatingActionButton: react.FC = () => {
-  const { isDark } = useAppTheme();
-
-  return (
-    <View className="absolute bottom-24 self-center">
-      <Pressable
-        className="size-16 rounded-full bg-accent items-center justify-center shadow-lg"
-        style={{
-          shadowColor: '#3b82f6',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-      >
-        <StyledFeather name="plus" size={28} className="text-white" />
-      </Pressable>
-    </View>
-  );
-};
-
-const BottomNavigation: react.FC = () => {
-  const { isDark } = useAppTheme();
-
-  return (
-    <View
-      className={cn(
-        'absolute bottom-0 left-0 right-0 border-t border-zinc-200 bg-surface',
-        isDark && 'border-zinc-800'
-      )}
-    >
-      <View className="flex-row items-center justify-around py-3 px-4">
-        <View className="items-center gap-1">
-          <StyledIonicons
-            name="home-outline"
-            size={24}
-            className="text-muted"
-          />
-          <AppText className="text-muted text-xs">Home</AppText>
-        </View>
-        <View
-          className="items-center gap-1 bg-primary/10 px-4 py-2 rounded-full"
-        >
-          <StyledIonicons
-            name="grid-outline"
-            size={24}
-            className="text-primary"
-          />
-          <AppText className="text-primary text-xs font-medium">
-            Quizzes
-          </AppText>
-        </View>
-        <View className="items-center gap-1">
-          <StyledIonicons
-            name="bar-chart-outline"
-            size={24}
-            className="text-muted"
-          />
-          <AppText className="text-muted text-xs">leaderboard</AppText>
-        </View>
-        <View className="items-center gap-1">
-          <StyledIonicons
-            name="people-outline"
-            size={24}
-            className="text-muted"
-          />
-          <AppText className="text-muted text-xs">Friends</AppText>
-        </View>
-      </View>
-    </View>
-  );
 };
 
 export default function QuizListPage() {
@@ -364,7 +161,7 @@ export default function QuizListPage() {
           </View>
         )}
       </ScrollView>
-      <FloatingActionButton />
+      {/* <FloatingActionButton /> */}
       <BottomNavigation />
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </SafeAreaView>

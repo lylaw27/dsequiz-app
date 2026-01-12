@@ -109,7 +109,7 @@ const AnswerCard: FC<AnswerCardProps> = ({
             <AppText
               className={cn(
                 'text-base font-semibold',
-                isSelected ? 'text-foreground' : 'text-foreground/60'
+                isSelected ? 'text-foreground' : 'text-foreground/70'
               )}
             >
               {answer.label}
@@ -169,7 +169,7 @@ const ProgressBar: FC<{
               'h-2 flex-1 rounded-full',
               isAnswered && !isCurrent && 'bg-accent/40',
               isAnswered && !isCurrent && isDark && 'bg-accent/30',
-              isCurrent && 'bg-accent',
+              isCurrent && 'bg-accent/80',
               !isAnswered && !isCurrent && 'bg-zinc-200',
               !isAnswered && !isCurrent && isDark && 'bg-zinc-800'
             )}
@@ -277,6 +277,8 @@ export default function QuizDetailPage() {
         question: question.question,
         userAnswer: userAnswer,
         correctAnswer: question.correct_answer,
+        userAnswerText: userAnswer ? question.options[userAnswer] : '',
+        correctAnswerText: question.options[question.correct_answer],
         isCorrect,
         subject: question.subject,
       };
@@ -588,6 +590,7 @@ export default function QuizDetailPage() {
                 onPress={handleNext}
                 className={cn(
                   'rounded-2xl',
+                  'bg-accent/70',
                   !selectedAnswer && 'opacity-50'
                 )}
               >

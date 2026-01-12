@@ -1,179 +1,214 @@
 import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Card, Chip, cn } from 'heroui-native';
+import react from 'react';
+import { Avatar, Button, Card, Chip, cn } from 'heroui-native';
 import type { FC } from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeIn,
   FadeInDown,
-  useAnimatedStyle,
-  withTiming,
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
-import { ScreenScrollView } from '../../components/screen-scroll-view';
+import { SafeAreaView } from '../../components/safe-area-view';
+import { BottomNavigation } from '../../components/bottom-navigation';
 import { useAppTheme } from '../../contexts/app-theme-context';
+import { QuizCard, QuizData } from './components/QuizCard';
+import { mapMCQSetToQuizData, MCQSet } from './quizList';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const AnimatedImage = Animated.createAnimatedComponent(Image);
-const AnimatedView = Animated.createAnimatedComponent(View);
-
 const StyledFeather = withUniwind(Feather);
+const StyledIonicons = withUniwind(Ionicons);
 
-type HomeCardProps = {
-  title: string;
-  imageLight: string;
-  imageDark: string;
-  count: number;
-  footer: string;
-  path: string;
-};
+// API Configuration - update this with your backend URL
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
-const cards: HomeCardProps[] = [
-  {
-    title: 'Components',
-    imageLight:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-components-light.png',
-    imageDark:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-components-dark.png',
-    count: 22,
-    footer: 'Explore all components',
-    path: 'components',
-  },
-  {
-    title: 'Themes',
-    imageLight:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-themes-light.png',
-    imageDark:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-themes-dark.png',
-    count: 4,
-    footer: 'Try different themes',
-    path: 'themes',
-  },
-  {
-    title: 'Showcases',
-    imageLight:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-showcases-light.png',
-    imageDark:
-      'https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/images/heroui-native-example/home-showcases-dark-1.png',
-    count: 5,
-    footer: 'View components in action',
-    path: 'showcases',
-  },
-];
-
-const HomeCard: FC<HomeCardProps & { index: number }> = ({
-  title,
-  imageLight,
-  imageDark,
-  count,
-  footer,
-  path,
-  index,
-}) => {
+export default function HomePage() {
+  const { isDark } = useAppTheme();
   const router = useRouter();
+  const [quizzes, setQuizzes] = react.useState<QuizData[]>([]);
+  const [loading, setLoading] = react.useState(true);
+  const [error, setError] = react.useState<string | null>(null);
 
-  const { isDark } = useAppTheme();
+  react.useEffect(() => {
+    fetchMCQSets();
+  }, []);
 
-  const rLightImageStyle = useAnimatedStyle(() => {
-    return {
-      opacity: isDark ? 0 : withTiming(0.4),
-    };
-  });
+  const fetchMCQSets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/mcqsets`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch MCQ sets');
+      }
 
-  const rDarkImageStyle = useAnimatedStyle(() => {
-    return {
-      opacity: isDark ? withTiming(0.4) : 0,
-    };
-  });
+      const result = await response.json();
+      const mcqSets: MCQSet[] = result.data || [];
+      
+      // Map MCQ sets to quiz data
+      const mappedQuizzes = mcqSets.map((mcqSet, index) => 
+        mapMCQSetToQuizData(mcqSet, index)
+      );
+      
+      setQuizzes(mappedQuizzes);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching MCQ sets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <AnimatedPressable
-      entering={FadeInDown.duration(300)
-        .delay(index * 100)
-        .easing(Easing.out(Easing.ease))}
-      onPress={() => router.push(path)}
-    >
-      <Card
-        className={cn(
-          'p-0 border border-zinc-200',
-          isDark && 'border-zinc-900'
-        )}
-      >
-        <AnimatedView
-          entering={FadeIn}
-          className="absolute inset-0 w-full h-full"
-        >
-          <AnimatedImage
-            source={{ uri: imageLight }}
-            className="absolute inset-0 w-full h-full"
-            resizeMode="cover"
-            style={rLightImageStyle}
-          />
-          <AnimatedImage
-            source={{ uri: imageDark }}
-            className="absolute inset-0 w-full h-full"
-            resizeMode="cover"
-            style={rDarkImageStyle}
-          />
-        </AnimatedView>
-        <View className="gap-4">
-          <Card.Header className="p-3">
-            <Chip size="sm" className="bg-background/25">
-              <Chip.Label className="text-foreground/85">
-                {`${count} total`}
-              </Chip.Label>
-            </Chip>
-          </Card.Header>
-          <Card.Body className="h-16" />
-          <Card.Footer className="px-3 pb-3 flex-row items-end gap-4">
-            <View className="flex-1">
-              <Card.Title className="text-2xl text-foreground/85">
-                {title}
-              </Card.Title>
-              <Card.Description className="text-foreground/65 pl-0.5">
-                {footer}
-              </Card.Description>
-            </View>
-            <View className="size-9 rounded-full bg-background/25 items-center justify-center">
-              <StyledFeather
-                name="arrow-up-right"
-                size={20}
-                className="text-foreground"
-              />
-            </View>
-          </Card.Footer>
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <AppText className="text-muted mt-4">Loading quizzes...</AppText>
         </View>
-      </Card>
-    </AnimatedPressable>
-  );
-};
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+      </SafeAreaView>
+    );
+  }
 
-export default function App() {
-  const { isDark } = useAppTheme();
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center px-5">
+          <StyledIonicons 
+            name="alert-circle-outline" 
+            size={64} 
+            className="text-muted mb-4"
+          />
+          <AppText className="text-lg font-semibold mb-2">Error Loading Quizzes</AppText>
+          <AppText className="text-muted text-center mb-4">{error}</AppText>
+          <Button onPress={fetchMCQSets}>
+            <Button.Label>Retry</Button.Label>
+          </Button>
+        </View>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+      </SafeAreaView>
+    );
+  }
+
 
   return (
-    <ScreenScrollView>
-      <View className="items-center justify-center my-4">
-        <AppText className="text-muted text-base">v1.0.0-beta.9</AppText>
-      </View>
-      <View className="gap-6">
-        {cards.map((card, index) => (
-          <HomeCard
-            key={card.title}
-            title={card.title}
-            imageLight={card.imageLight}
-            imageDark={card.imageDark}
-            count={card.count}
-            footer={card.footer}
-            path={card.path}
-            index={index}
-          />
-        ))}
-      </View>
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Header */}
+        <View className="px-5 pt-4 pb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <View className="flex-row items-center gap-2 mb-1">
+                <StyledIonicons name="sunny-outline" size={20} className="text-primary" />
+                <AppText className="text-primary text-xs font-semibold tracking-wider">
+                  GOOD MORNING
+                </AppText>
+              </View>
+              <AppText className="text-4xl font-bold">Amitesh</AppText>
+            </View>
+            <Avatar size="lg" alt="User Avatar">
+              <Avatar.Image source={{ uri: 'https://img.heroui.chat/image/avatar?w=400&h=400&u=100' }} />
+              <Avatar.Fallback />
+            </Avatar>
+          </View>
+        </View>
+
+        {/* 熱門題庫 Section */}
+        <View className="px-5 mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <AppText className="text-2xl font-bold">熱門題庫</AppText>
+            <Button size="md" className="bg-primary rounded-full">
+              <StyledFeather name="plus" size={16} className="text-white mr-1" />
+              <Button.Label className="text-white">Quiz code</Button.Label>
+            </Button>
+          </View>
+
+          {/* Featured Quiz Card */}
+          <Card className="p-0 overflow-hidden">
+            <View className="relative">
+              {/* Background Gradient Layers */}
+              <View className="absolute inset-0 bg-red-500" />
+              <View className="absolute inset-0 bg-blue-600" style={{ top: 60 }} />
+              <View className="absolute inset-0 bg-zinc-700" style={{ top: 120 }} />
+              
+              {/* Content */}
+              <Card.Body className="p-5">
+                <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center gap-2">
+                    <Chip size="md" className="bg-white">
+                      <Chip.Label className="text-red-600 font-semibold">
+                        General Knowledge
+                      </Chip.Label>
+                    </Chip>
+                    <Chip size="md" className="bg-white/90">
+                      <Chip.Label className="text-zinc-800 font-semibold">
+                        2min
+                      </Chip.Label>
+                    </Chip>
+                  </View>
+                  <Pressable className="size-8 rounded-full bg-white/20 items-center justify-center">
+                    <StyledFeather name="x" size={18} className="text-white" />
+                  </Pressable>
+                </View>
+
+                <AppText className="text-white text-3xl font-bold mb-2">
+                  Saturday night Quiz
+                </AppText>
+                <AppText className="text-white/90 text-base mb-6">
+                  13 Quizzes
+                </AppText>
+
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-3">
+                    <Avatar size="md" alt="Brandon">
+                      <Avatar.Image source={{ uri: 'https://img.heroui.chat/image/avatar?w=400&h=400&u=7' }} />
+                      <Avatar.Fallback />
+                    </Avatar>
+                    <View>
+                      <AppText className="text-white/70 text-xs">Shared By</AppText>
+                      <AppText className="text-white text-sm font-semibold">
+                        Brandon Matrovs
+                      </AppText>
+                    </View>
+                  </View>
+                  <Button size="md" className="bg-primary rounded-full">
+                    <Button.Label className="text-white font-semibold">
+                      Start Now
+                    </Button.Label>
+                  </Button>
+                </View>
+              </Card.Body>
+            </View>
+          </Card>
+        </View>
+
+        {/* 為你推薦 Section */}
+        <View className="px-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <AppText className="text-2xl font-bold">為你推薦</AppText>
+            <Pressable>
+              <AppText className="text-primary text-base font-medium">See all</AppText>
+            </Pressable>
+          </View>
+
+          <View className="gap-4">
+            {/* {recommendedQuizzes.map((quiz) => (
+              <RecommendedQuizCard key={quiz.id} {...quiz} />
+            ))} */}
+            {quizzes.map((quiz, index) => (
+              <QuizCard key={quiz.id} {...quiz} index={index} />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+      <BottomNavigation />
       <StatusBar style={isDark ? 'light' : 'dark'} />
-    </ScreenScrollView>
+    </SafeAreaView>
   );
 }

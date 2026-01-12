@@ -17,6 +17,8 @@ type QuizResult = {
   question: string;
   userAnswer: string;
   correctAnswer: string;
+  userAnswerText: string;
+  correctAnswerText: string;
   isCorrect: boolean;
   subject: string;
 };
@@ -31,7 +33,7 @@ export default function QuizSummaryPage() {
     results: string;
   }>();
 
-  const topic = params.topic || 'Quiz';
+  const topic = params.topic || '測驗';
   const totalQuestions = parseInt(params.totalQuestions || '0', 10);
   const correctCount = parseInt(params.correctCount || '0', 10);
   const results: QuizResult[] = params.results ? JSON.parse(params.results as string) : [];
@@ -51,13 +53,19 @@ export default function QuizSummaryPage() {
     return 'text-red-400';
   };
 
+  const getScoreMessage = () => {
+    if (percentage >= 80) return '做得好！';
+    if (percentage >= 60) return '不錯！';
+    return '繼續努力！';
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Header */}
-        <View className="px-5 pt-4 pb-6">
+        <View className="px-5 pt-4">
           <View className="flex-row items-center justify-between mb-6">
-            <AppText className="text-3xl font-bold flex-1">Quiz Complete!</AppText>
+            <AppText className="text-3xl font-bold flex-1">{getScoreMessage()}</AppText>
             <Pressable
               onPress={() => router.back()}
               className="size-12 rounded-2xl bg-surface items-center justify-center"
@@ -65,7 +73,6 @@ export default function QuizSummaryPage() {
               <StyledFeather name="x" size={24} className="text-foreground" />
             </Pressable>
           </View>
-          <AppText className="text-xl text-muted mb-2">{topic}</AppText>
         </View>
 
         {/* Score Card */}
@@ -74,17 +81,18 @@ export default function QuizSummaryPage() {
             entering={FadeInDown.duration(400).easing(Easing.out(Easing.ease))}
           >
             <Card className={cn('border border-zinc-200 bg-surface', isDark && 'border-zinc-800')}>
-              <Card.Body className="p-6">
+              <Card.Body className="p-5">
                 <View className="items-center">
+                  <AppText className="text-2xl text-muted mb-2">{topic}</AppText>
                   <AppText
                     className={cn(
-                      'text-6xl font-bold mb-2',
+                      'text-6xl font-bold mb-6',
                       isDark ? getScoreColorDark() : getScoreColor()
                     )}
                   >
                     {percentage}%
                   </AppText>
-                  <AppText className="text-lg text-muted mb-6">Your Score</AppText>
+                  {/* <AppText className="text-lg text-muted mb-6">你的分數</AppText> */}
 
                   <View className="flex-row gap-8">
                     <View className="items-center">
@@ -102,7 +110,7 @@ export default function QuizSummaryPage() {
                         />
                       </View>
                       <AppText className="text-2xl font-bold">{correctCount}</AppText>
-                      <AppText className="text-sm text-muted">Correct</AppText>
+                      <AppText className="text-sm text-muted">正確</AppText>
                     </View>
 
                     <View className="items-center">
@@ -120,7 +128,7 @@ export default function QuizSummaryPage() {
                         />
                       </View>
                       <AppText className="text-2xl font-bold">{incorrectCount}</AppText>
-                      <AppText className="text-sm text-muted">Incorrect</AppText>
+                      <AppText className="text-sm text-muted">錯誤</AppText>
                     </View>
 
                     <View className="items-center">
@@ -138,7 +146,7 @@ export default function QuizSummaryPage() {
                         />
                       </View>
                       <AppText className="text-2xl font-bold">{totalQuestions}</AppText>
-                      <AppText className="text-sm text-muted">Total</AppText>
+                      <AppText className="text-sm text-muted">總數</AppText>
                     </View>
                   </View>
                 </View>
@@ -149,7 +157,7 @@ export default function QuizSummaryPage() {
 
         {/* Results List */}
         <View className="px-5">
-          <AppText className="text-xl font-bold mb-4">Question Results</AppText>
+          <AppText className="text-xl font-bold mb-4">題目結果</AppText>
           <View className="gap-3">
             {results.map((result, index) => (
               <AnimatedPressable
@@ -168,7 +176,7 @@ export default function QuizSummaryPage() {
                         : 'bg-red-950/40 border-red-500')
                   )}
                 >
-                  <Card.Body className="p-4">
+                  <Card.Body className="p-1">
                     <View className="flex-row items-start gap-3 mb-3">
                       <StyledFeather
                         name={result.isCorrect ? 'check-circle' : 'x-circle'}
@@ -181,7 +189,7 @@ export default function QuizSummaryPage() {
                       <View className="flex-1">
                         <AppText
                           className={cn(
-                            'text-sm font-semibold mb-1',
+                            'text-sm font-semibold',
                             result.isCorrect
                               ? isDark
                                 ? 'text-green-300'
@@ -191,7 +199,7 @@ export default function QuizSummaryPage() {
                               : 'text-red-700'
                           )}
                         >
-                          Question {result.questionIndex + 1} • {result.subject}
+                          {/* 問題 {result.questionIndex + 1} • {result.subject} */}
                         </AppText>
                         <AppText
                           className={cn(
@@ -207,26 +215,26 @@ export default function QuizSummaryPage() {
                         >
                           {result.question}
                         </AppText>
-                        {!result.isCorrect && (
                           <View>
                             <AppText
                               className={cn(
                                 'text-sm',
                                 isDark ? 'text-red-300' : 'text-red-700'
                               )}
-                            >
-                              Your answer: {result.userAnswer}
+                              >
+                              你的答案：{result.userAnswer}) {result.userAnswerText}
                             </AppText>
+                          {!result.isCorrect && (
                             <AppText
                               className={cn(
                                 'text-sm font-semibold',
                                 isDark ? 'text-red-200' : 'text-red-800'
                               )}
                             >
-                              Correct answer: {result.correctAnswer}
+                              正確答案：{result.correctAnswer}) {result.correctAnswerText}
                             </AppText>
-                          </View>
                         )}
+                          </View>
                       </View>
                     </View>
                   </Card.Body>

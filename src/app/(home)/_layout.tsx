@@ -67,7 +67,7 @@ export default function Layout() {
           fullScreenGestureEnabled: isLiquidGlassAvailable() ? false : true,
           contentStyle: {
             backgroundColor: themeColorBackground,
-          },
+          }, 
           headerShown: false,
         }}
       >
