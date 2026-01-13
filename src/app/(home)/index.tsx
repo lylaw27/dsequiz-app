@@ -2,22 +2,18 @@ import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Avatar, Button, Card, Chip } from 'heroui-native';
 import react from 'react';
-import { Avatar, Button, Card, Chip, cn } from 'heroui-native';
-import type { FC } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import Animated, {
-  Easing,
-  FadeInDown,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
-import { SafeAreaView } from '../../components/safe-area-view';
 import { BottomNavigation } from '../../components/bottom-navigation';
+import { SafeAreaView } from '../../components/safe-area-view';
 import { useAppTheme } from '../../contexts/app-theme-context';
 import { QuizCard, QuizData } from './components/QuizCard';
-import { mapMCQSetToQuizData, MCQSet } from './quizList';
 import { SwipableCardStack } from './components/SwipableCardStack';
+import { mapMCQSetToQuizData, MCQSet } from './quizList';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const StyledFeather = withUniwind(Feather);
@@ -26,6 +22,55 @@ const StyledIonicons = withUniwind(Ionicons);
 // API Configuration - update this with your backend URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
+const recommendedQuizzes: [] = [
+  {
+    id: '1',
+    category: 'Math1',
+    title: 'Algebra Basics',
+    questionCount: 20,
+    difficulty: 'Easy',
+    estimatedTime: '10 mins',
+    icon: 'function-outline',
+  },
+    {
+    id: '2',
+    category: 'Chinese2',
+    title: 'Algebra Basics',
+    questionCount: 15,
+    difficulty: 'Hard',
+    estimatedTime: '10 mins',
+    icon: 'function-outline',
+  },
+    {
+    id: '3',
+    category: 'Chinese3',
+    title: 'Algebra Basics',
+    questionCount: 15,
+    difficulty: 'Hard',
+    estimatedTime: '10 mins',
+    icon: 'function-outline',
+  },
+    {
+    id: '4',
+    category: 'Chinese4',
+    title: 'Algebra Basics',
+    questionCount: 15,
+    difficulty: 'Hard',
+    estimatedTime: '10 mins',
+    icon: 'function-outline',
+  },
+    {
+    id: '5',
+    category: 'Chinese5',
+    title: 'Algebra Basics',
+    questionCount: 15,
+    difficulty: 'Hard',
+    estimatedTime: '10 mins',
+    icon: 'function-outline',
+  }
+]
+
+
 export default function HomePage() {
   const { isDark } = useAppTheme();
   const router = useRouter();
@@ -33,11 +78,7 @@ export default function HomePage() {
   const [loading, setLoading] = react.useState(true);
   const [error, setError] = react.useState<string | null>(null);
 
-  react.useEffect(() => {
-    fetchMCQSets();
-  }, []);
-
-  const fetchMCQSets = async () => {
+  const fetchMCQSets = react.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -63,8 +104,13 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  react.useEffect(() => {
+    fetchMCQSets();
+  }, [fetchMCQSets]);
+
+  // Render loading state
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -77,6 +123,7 @@ export default function HomePage() {
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -97,7 +144,7 @@ export default function HomePage() {
     );
   }
 
-
+  // Render main content
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
@@ -132,7 +179,7 @@ export default function HomePage() {
 
           {/* Featured Quiz Card Stack */}
           <SwipableCardStack
-            data={quizzes.slice(0, 5)} // Show first 5 quizzes in stack
+            data={recommendedQuizzes.slice(0, 5)} // Show first 5 quizzes in stack
             renderCard={(item) => (
               <Card className="p-0 overflow-hidden rounded-2xl">
                 <View className="relative">
@@ -214,9 +261,6 @@ export default function HomePage() {
           </View>
 
           <View className="gap-4">
-            {/* {recommendedQuizzes.map((quiz) => (
-              <RecommendedQuizCard key={quiz.id} {...quiz} />
-            ))} */}
             {quizzes.map((quiz, index) => (
               <QuizCard key={quiz.id} {...quiz} index={index} />
             ))}

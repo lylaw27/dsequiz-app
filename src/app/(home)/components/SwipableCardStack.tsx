@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Dimensions } from 'react-native';
+import { Dimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  useSharedValue,
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
+  useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
-  interpolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 120;
@@ -29,8 +28,9 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateY = useSharedValue(0);
-  const scale = useSharedValue(1);
-
+  const bottomCardProgress = useSharedValue(0);
+  const startY = useSharedValue(0);
+  const offsetGap = 22;
   const handleSwipe = (direction: 'up' | 'down') => {
     const item = data[currentIndex];
     if (direction === 'up' && onSwipeUp) {
@@ -46,121 +46,189 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
     }
   };
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startY = translateY.value;
-    },
-    onActive: (event, ctx: any) => {
-      translateY.value = ctx.startY + event.translationY;
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      startY.value = translateY.value;
+    })
+    .onUpdate((event) => {
+      translateY.value = startY.value + event.translationY;
       
-      // Scale down slightly while dragging
-      const dragScale = interpolate(
+      // Control the animation progress for the bottom card coming up
+      const progress = interpolate(
         Math.abs(translateY.value),
         [0, SWIPE_THRESHOLD],
-        [1, 0.95],
+        [0, 1],
         'clamp'
       );
-      scale.value = dragScale;
-    },
-    onEnd: (event) => {
+      bottomCardProgress.value = progress;
+    })
+    .onEnd(() => {
       const shouldSwipeUp = translateY.value < -SWIPE_THRESHOLD;
       const shouldSwipeDown = translateY.value > SWIPE_THRESHOLD;
 
-      if (shouldSwipeUp) {
-        translateY.value = withSpring(-SCREEN_HEIGHT, {}, () => {
-          runOnJS(handleSwipe)('up');
+      if (shouldSwipeUp || shouldSwipeDown) {
+        // Animate bottom card to overlay position
+        bottomCardProgress.value = withTiming(1, { duration: 300 }, () => {
+          runOnJS(handleSwipe)(shouldSwipeUp ? 'up' : 'down');
           translateY.value = 0;
-          scale.value = withTiming(1);
-        });
-      } else if (shouldSwipeDown) {
-        translateY.value = withSpring(SCREEN_HEIGHT, {}, () => {
-          runOnJS(handleSwipe)('down');
-          translateY.value = 0;
-          scale.value = withTiming(1);
+          bottomCardProgress.value = 0;
         });
       } else {
         translateY.value = withSpring(0);
-        scale.value = withTiming(1);
+        bottomCardProgress.value = withTiming(0);
       }
-    },
-  });
+    });
 
-  const animatedCardStyle = useAnimatedStyle(() => {
-    const rotate = interpolate(
-      translateY.value,
-      [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD],
-      [-5, 0, 5],
+  const animatedTopCardStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [1, 0],
+      'clamp'
+    );
+
+    const scale = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [1, 0.95],
       'clamp'
     );
 
     return {
+      opacity,
       transform: [
         { translateY: translateY.value },
-        { scale: scale.value },
-        { rotate: `${rotate}deg` },
+        { scale },
       ],
     };
   });
 
-  const getStackedCardStyle = (index: number) => {
-    const stackOffset = index * 8;
-    const stackScale = 1 - index * 0.05;
+  // Create circular array to always show cards (wraps around)
+  const getCardAtIndex = (index: number) => {
+    return data[index % data.length];
+  };
+
+  // Front card at currentIndex, then next cards (index+1, index+2)
+  // These will be shown stacked behind/above the current card
+  const visibleCards = Array.from({ length: 3 }, (_, i) => {
+    const arrayIndex = (currentIndex + i) % data.length;
+    return {
+      item: getCardAtIndex(arrayIndex),
+      actualIndex: arrayIndex,
+      stackIndex: i,
+    };
+  });
+
+  // Create animated styles for each stacked card
+  const animatedStackedCard1Style = useAnimatedStyle(() => {
+    const stackOffset = -1 * offsetGap;
+    const baseScale = 1 - 1 * 0.05;
+    const baseWidth = 0.96; // 96% width
     
+    // Card coming to the front
+    const nextScale = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [baseScale, 1],
+      'clamp'
+    );
+
+    const nextTop = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [stackOffset, 0],
+      'clamp'
+    );
+
+    const nextWidth = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [baseWidth, 1],
+      'clamp'
+    );
+
+    return {
+      transform: [{ scale: nextScale }],
+      top: nextTop,
+      width: `${nextWidth * 100}%`,
+      alignSelf: 'center',
+    };
+  });
+
+  const animatedStackedCard2Style = useAnimatedStyle(() => {
+    const stackOffset = -2 * offsetGap;
+    const baseScale = 1 - 2 * 0.05;
+    const baseWidth = 0.92; // 92% width
+    
+    // Other cards move slightly forward
+    const nextScale = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [baseScale, Math.min(1, baseScale + 0.05)],
+      'clamp'
+    );
+
+    const nextTop = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [stackOffset, Math.max(-offsetGap, stackOffset + offsetGap)],
+      'clamp'
+    );
+
+    const nextWidth = interpolate(
+      bottomCardProgress.value,
+      [0, 1],
+      [baseWidth, 0.96],
+      'clamp'
+    );
+
+    return {
+      transform: [{ scale: nextScale }],
+      top: nextTop,
+      width: `${nextWidth * 100}%`,
+      alignSelf: 'center',
+    };
+  });
+
+  const getAnimatedStyle = (index: number) => {
+    switch (index) {
+      case 1: return animatedStackedCard1Style;
+      case 2: return animatedStackedCard2Style;
+      default: return {};
+    }
+  };
+
+  const getStackedCardStyle = (index: number) => {
     return {
       position: 'absolute' as const,
-      width: '100%',
-      top: stackOffset,
-      transform: [{ scale: stackScale }],
-      zIndex: data.length - index,
-      opacity: index < 3 ? 1 : 0, // Show max 3 cards in stack
+      zIndex: 10 - index,
     };
   };
 
-  const animatedStackedCardStyle = (index: number) =>
-    useAnimatedStyle(() => {
-      const stackOffset = index * 8;
-      const baseScale = 1 - index * 0.05;
-      
-      // Animate the next card coming forward when current card is swiped
-      const nextScale = interpolate(
-        Math.abs(translateY.value),
-        [0, SWIPE_THRESHOLD],
-        [baseScale, Math.min(1, baseScale + 0.05)],
-        'clamp'
-      );
-
-      return {
-        transform: [{ scale: nextScale }],
-        top: stackOffset,
-      };
-    });
-
-  const visibleCards = data.slice(currentIndex, currentIndex + 4);
-
   return (
-    <View style={{ height: 280, position: 'relative' }}>
-      {/* Render stacked cards in reverse order (back to front) */}
-      {visibleCards.slice(1).reverse().map((item, reverseIndex) => {
-        const index = visibleCards.length - 1 - reverseIndex;
+    <View style={{ height: 200, position: 'relative', alignItems: 'center',top : 30 }}>
+      {/* Render stacked cards behind (cards 3, 2, 1 from back to front) */}
+      {visibleCards.slice(1).reverse().map((cardData) => {
+        const stackIndex = cardData.stackIndex;
         return (
           <Animated.View
-            key={`${currentIndex + index}-${item.id}`}
+            key={`stacked-${cardData.actualIndex}-${stackIndex}`}
             style={[
-              getStackedCardStyle(index),
-              animatedStackedCardStyle(index),
+              getStackedCardStyle(stackIndex),
+              getAnimatedStyle(stackIndex),
             ]}
           >
-            {renderCard(item, currentIndex + index)}
+            {renderCard(cardData.item, cardData.actualIndex)}
           </Animated.View>
         );
       })}
 
-      {/* Top card (swipable) */}
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[{ zIndex: data.length }, animatedCardStyle]}>
-          {renderCard(visibleCards[0], currentIndex)}
+      {/* Top card (swipable) - highest z-index, front-most */}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[{ zIndex: 100, width: '100%' }, animatedTopCardStyle]}>
+          {renderCard(visibleCards[0].item, visibleCards[0].actualIndex)}
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 };
