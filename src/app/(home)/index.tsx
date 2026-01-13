@@ -123,31 +123,31 @@ export default function HomePage() {
         <View className="px-5 mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <AppText className="text-2xl font-bold">熱門題庫</AppText>
-            <Button size="md" className="bg-primary rounded-full">
+            {/* <Button size="md" className="bg-primary rounded-full">
               <StyledFeather name="plus" size={16} className="text-white mr-1" />
               <Button.Label className="text-white">Quiz code</Button.Label>
-            </Button>
+            </Button> */}
           </View>
 
           {/* Featured Quiz Card */}
-          <Card className="p-0 overflow-hidden">
+          <Card className="p-0 overflow-hidden rounded-2xl">
             <View className="relative">
               {/* Background Gradient Layers */}
-              <View className="absolute inset-0 bg-red-500" />
-              <View className="absolute inset-0 bg-blue-600" style={{ top: 60 }} />
-              <View className="absolute inset-0 bg-zinc-700" style={{ top: 120 }} />
+              {/* <View className="absolute inset-0 bg-red-500" /> */}
+              {/* <View className="absolute inset-0 bg-blue-600" style={{ top: 60 }} /> */}
+              <View className="absolute inset-0 bg-black/60"/>
               
               {/* Content */}
-              <Card.Body className="p-5">
-                <View className="flex-row items-center justify-between mb-4">
+              <Card.Body className="p-4">
+                <View className="flex-row items-center justify-between mb-1">
                   <View className="flex-row items-center gap-2">
                     <Chip size="md" className="bg-white">
-                      <Chip.Label className="text-red-600 font-semibold">
+                      <Chip.Label className="text-red-600 text-xs">
                         General Knowledge
                       </Chip.Label>
                     </Chip>
                     <Chip size="md" className="bg-white/90">
-                      <Chip.Label className="text-zinc-800 font-semibold">
+                      <Chip.Label className="text-zinc-800 text-xs">
                         2min
                       </Chip.Label>
                     </Chip>
@@ -157,28 +157,28 @@ export default function HomePage() {
                   </Pressable>
                 </View>
 
-                <AppText className="text-white text-3xl font-bold mb-2">
+                <AppText className="text-white text-2xl font-bold mb-1">
                   Saturday night Quiz
                 </AppText>
-                <AppText className="text-white/90 text-base mb-6">
+                <AppText className="text-white/90 text-sm mb-2">
                   13 Quizzes
                 </AppText>
 
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-3">
-                    <Avatar size="md" alt="Brandon">
+                    <Avatar size="sm" alt="Brandon">
                       <Avatar.Image source={{ uri: 'https://img.heroui.chat/image/avatar?w=400&h=400&u=7' }} />
                       <Avatar.Fallback />
                     </Avatar>
                     <View>
                       <AppText className="text-white/70 text-xs">Shared By</AppText>
-                      <AppText className="text-white text-sm font-semibold">
+                      <AppText className="text-white text-xs">
                         Brandon Matrovs
                       </AppText>
                     </View>
                   </View>
-                  <Button size="md" className="bg-primary rounded-full">
-                    <Button.Label className="text-white font-semibold">
+                  <Button size="sm" className="bg-accent rounded-full">
+                    <Button.Label className="text-white text-sm">
                       Start Now
                     </Button.Label>
                   </Button>
