@@ -17,6 +17,7 @@ import { BottomNavigation } from '../../components/bottom-navigation';
 import { useAppTheme } from '../../contexts/app-theme-context';
 import { QuizCard, QuizData } from './components/QuizCard';
 import { mapMCQSetToQuizData, MCQSet } from './quizList';
+import { SwipableCardStack } from './components/SwipableCardStack';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const StyledFeather = withUniwind(Feather);
@@ -129,63 +130,78 @@ export default function HomePage() {
             </Button> */}
           </View>
 
-          {/* Featured Quiz Card */}
-          <Card className="p-0 overflow-hidden rounded-2xl">
-            <View className="relative">
-              {/* Background Gradient Layers */}
-              {/* <View className="absolute inset-0 bg-red-500" /> */}
-              {/* <View className="absolute inset-0 bg-blue-600" style={{ top: 60 }} /> */}
-              <View className="absolute inset-0 bg-black/60"/>
-              
-              {/* Content */}
-              <Card.Body className="p-4">
-                <View className="flex-row items-center justify-between mb-1">
-                  <View className="flex-row items-center gap-2">
-                    <Chip size="md" className="bg-white">
-                      <Chip.Label className="text-red-600 text-xs">
-                        General Knowledge
-                      </Chip.Label>
-                    </Chip>
-                    <Chip size="md" className="bg-white/90">
-                      <Chip.Label className="text-zinc-800 text-xs">
-                        2min
-                      </Chip.Label>
-                    </Chip>
-                  </View>
-                  <Pressable className="size-8 rounded-full bg-white/20 items-center justify-center">
-                    <StyledFeather name="x" size={18} className="text-white" />
-                  </Pressable>
-                </View>
-
-                <AppText className="text-white text-2xl font-bold mb-1">
-                  Saturday night Quiz
-                </AppText>
-                <AppText className="text-white/90 text-sm mb-2">
-                  13 Quizzes
-                </AppText>
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <Avatar size="sm" alt="Brandon">
-                      <Avatar.Image source={{ uri: 'https://img.heroui.chat/image/avatar?w=400&h=400&u=7' }} />
-                      <Avatar.Fallback />
-                    </Avatar>
-                    <View>
-                      <AppText className="text-white/70 text-xs">Shared By</AppText>
-                      <AppText className="text-white text-xs">
-                        Brandon Matrovs
-                      </AppText>
+          {/* Featured Quiz Card Stack */}
+          <SwipableCardStack
+            data={quizzes.slice(0, 5)} // Show first 5 quizzes in stack
+            renderCard={(item) => (
+              <Card className="p-0 overflow-hidden rounded-2xl">
+                <View className="relative">
+                  <View className="absolute inset-0 bg-black/60"/>
+                  
+                  {/* Content */}
+                  <Card.Body className="p-4">
+                    <View className="flex-row items-center justify-between mb-1">
+                      <View className="flex-row items-center gap-2">
+                        <Chip size="md" className="bg-white">
+                          <Chip.Label className="text-red-600 text-xs">
+                            {item.category}
+                          </Chip.Label>
+                        </Chip>
+                        <Chip size="md" className="bg-white/90">
+                          <Chip.Label className="text-zinc-800 text-xs">
+                            {item.estimatedTime}
+                          </Chip.Label>
+                        </Chip>
+                      </View>
+                      <Pressable className="size-8 rounded-full bg-white/20 items-center justify-center">
+                        <StyledFeather name="x" size={18} className="text-white" />
+                      </Pressable>
                     </View>
-                  </View>
-                  <Button size="sm" className="bg-accent rounded-full">
-                    <Button.Label className="text-white text-sm">
-                      Start Now
-                    </Button.Label>
-                  </Button>
+
+                    <AppText className="text-white text-2xl font-bold mb-1">
+                      {item.title}
+                    </AppText>
+                    <AppText className="text-white/90 text-sm mb-2">
+                      {item.questionCount} Questions
+                    </AppText>
+
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <Avatar size="sm" alt="User">
+                          <Avatar.Image source={{ uri: 'https://img.heroui.chat/image/avatar?w=400&h=400&u=7' }} />
+                          <Avatar.Fallback />
+                        </Avatar>
+                        <View>
+                          <AppText className="text-white/70 text-xs">Difficulty</AppText>
+                          <AppText className="text-white text-xs">
+                            {item.difficulty}
+                          </AppText>
+                        </View>
+                      </View>
+                      <Button 
+                        size="sm" 
+                        className="bg-accent rounded-full"
+                        onPress={() => router.push({
+                          pathname: '/quiz-question',
+                          params: { quizId: item.id }
+                        })}
+                      >
+                        <Button.Label className="text-white text-sm">
+                          Start Now
+                        </Button.Label>
+                      </Button>
+                    </View>
+                  </Card.Body>
                 </View>
-              </Card.Body>
-            </View>
-          </Card>
+              </Card>
+            )}
+            onSwipeUp={(item) => {
+              console.log('Swiped up:', item.title);
+            }}
+            onSwipeDown={(item) => {
+              console.log('Swiped down:', item.title);
+            }}
+          />
         </View>
 
         {/* 為你推薦 Section */}
