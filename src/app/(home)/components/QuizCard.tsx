@@ -20,7 +20,7 @@ export type QuizData = {
   quizCount: number;
   icon: string;
   iconColor: string;
-  iconBgColor: string;
+  bgColor: string;
   peopleJoined: number;
   avatars: string[];
 };
@@ -33,7 +33,7 @@ export const QuizCard: react.FC<QuizCardProps> = ({
   quizCount,
   icon,
   iconColor,
-  iconBgColor,
+  bgColor,
   peopleJoined,
   avatars,
   index,
@@ -50,18 +50,19 @@ export const QuizCard: react.FC<QuizCardProps> = ({
     >
       <Card
         className={cn(
-          'border border-zinc-200 bg-surface p-3',
+            bgColor,
+          'border border-zinc-200 p-3',
           isDark && 'border-zinc-800'
         )}
       >
         <View className="gap-4">
           <Card.Body>
-            <View className="flex-row items-center justify-between mb-2 border-2 rounded-2xl p-2 border-surface-foreground">
+            <View className="flex-row items-center justify-between mb-2 border-2 rounded-2xl p-2 border-surface-foreground bg-surface">
               <View className="flex-row items-center gap-3 flex-1">
                 <View
                   className="size-14 rounded-2xl items-center justify-center"
                   style={{
-                    backgroundColor: isDark ? iconColor + '33' : iconBgColor,
+                    backgroundColor: isDark ? iconColor + '33' : bgColor,
                   }}
                 >
                   <StyledIonicons

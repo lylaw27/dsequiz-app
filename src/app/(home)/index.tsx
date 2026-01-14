@@ -149,7 +149,7 @@ export default function HomePage() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
-        <View className="px-5 pt-4 pb-6">
+        <View className="px-5 pt-4 pb-6 bg-surface">
           <View className="flex-row items-center justify-between mb-4">
             <View>
               <View className="flex-row items-center gap-2 mb-1">
@@ -168,7 +168,7 @@ export default function HomePage() {
         </View>
 
         {/* 熱門題庫 Section */}
-        <View className="px-5 mb-6">
+        <View className="px-5 mb-36 bg-surface rounded-b-3xl h-32">
           <View className="flex-row items-center justify-between mb-4">
             <AppText className="text-2xl font-bold">熱門題庫</AppText>
             {/* <Button size="md" className="bg-primary rounded-full">
@@ -179,6 +179,7 @@ export default function HomePage() {
 
           {/* Featured Quiz Card Stack */}
           <SwipableCardStack
+            autoSwipeInterval={4000} // Auto swipe every 5 seconds
             data={recommendedQuizzes.slice(0, 5)} // Show first 5 quizzes in stack
             renderCard={(item) => (
               <Card className="p-0 overflow-hidden rounded-2xl">
@@ -252,7 +253,7 @@ export default function HomePage() {
         </View>
 
         {/* 為你推薦 Section */}
-        <View className="px-5">
+        <View className="px-5 bg-surface rounded-t-3xl py-5">
           <View className="flex-row items-center justify-between mb-4">
             <AppText className="text-2xl font-bold">為你推薦</AppText>
             <Pressable>
@@ -262,7 +263,7 @@ export default function HomePage() {
 
           <View className="gap-4">
             {quizzes.map((quiz, index) => (
-              <QuizCard key={quiz.id} {...quiz} index={index} />
+              <QuizCard key={quiz.id} {...quiz} bgColor="bg-surface-foreground" index={index} />
             ))}
           </View>
         </View>

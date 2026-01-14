@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -18,6 +18,7 @@ interface SwipableCardStackProps {
   renderCard: (item: any, index: number) => React.ReactNode;
   onSwipeUp?: (item: any) => void;
   onSwipeDown?: (item: any) => void;
+  autoSwipeInterval?: number; // Time in milliseconds for auto swipe down
 }
 
 export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
@@ -25,13 +26,16 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
   renderCard,
   onSwipeUp,
   onSwipeDown,
+  autoSwipeInterval,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateY = useSharedValue(0);
   const bottomCardProgress = useSharedValue(0);
   const startY = useSharedValue(0);
   const offsetGap = 22;
-  const handleSwipe = (direction: 'up' | 'down') => {
+
+
+  const handleSwipe = useCallback((direction: 'up' | 'down') => {
     const item = data[currentIndex];
     if (direction === 'up' && onSwipeUp) {
       onSwipeUp(item);
@@ -44,7 +48,32 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
     } else {
       setCurrentIndex(0); // Loop back to first card
     }
-  };
+  }, [currentIndex, data, onSwipeUp, onSwipeDown]);
+
+  // Programmatically trigger swipe animation
+  const triggerAutoSwipe = useCallback(() => {
+    'worklet';
+    translateY.value = SWIPE_THRESHOLD + 10; // Slightly past threshold
+    bottomCardProgress.value = withTiming(1, { duration: 300 }, (finished) => {
+      if (finished) {
+        runOnJS(handleSwipe)('down');
+        // Small delay to let React update the currentIndex before resetting
+        translateY.value = withTiming(0, { duration: 0 });
+        bottomCardProgress.value = withTiming(0, { duration: 0 });
+      }
+    });
+  }, [handleSwipe, translateY, bottomCardProgress]);
+
+  // Auto swipe down timer
+  useEffect(() => {
+    if (!autoSwipeInterval || autoSwipeInterval <= 0) return;
+
+    const timer = setInterval(() => {
+      triggerAutoSwipe();
+    }, autoSwipeInterval);
+
+    return () => clearInterval(timer);
+  }, [autoSwipeInterval, currentIndex, triggerAutoSwipe]);
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -68,10 +97,13 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
 
       if (shouldSwipeUp || shouldSwipeDown) {
         // Animate bottom card to overlay position
-        bottomCardProgress.value = withTiming(1, { duration: 300 }, () => {
-          runOnJS(handleSwipe)(shouldSwipeUp ? 'up' : 'down');
-          translateY.value = 0;
-          bottomCardProgress.value = 0;
+        bottomCardProgress.value = withTiming(1, { duration: 300 }, (finished) => {
+          if (finished) {
+            runOnJS(handleSwipe)(shouldSwipeUp ? 'up' : 'down');
+            // Small delay to let React update the currentIndex before resetting
+            translateY.value = withTiming(0, { duration: 0 });
+            bottomCardProgress.value = withTiming(0, { duration: 0 });
+          }
         });
       } else {
         translateY.value = withSpring(0);
@@ -80,24 +112,35 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
     });
 
   const animatedTopCardStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
+    // Make the card move into the stack position (behind the next cards)
+    const stackOffset = -3 * offsetGap; // Position of the back-most card
+    const finalTranslateY = interpolate(
       bottomCardProgress.value,
       [0, 1],
-      [1, 0],
+      [0, stackOffset],
       'clamp'
     );
 
+    // Scale down to match the back-most card size
     const scale = interpolate(
       bottomCardProgress.value,
       [0, 1],
-      [1, 0.95],
+      [1, 0.85], // Scale down to 85% to match back card
+      'clamp'
+    );
+
+    // Fade out as it moves back
+    const opacity = interpolate(
+      bottomCardProgress.value,
+      [0, 0.7, 1],
+      [1, 0.5, 0],
       'clamp'
     );
 
     return {
       opacity,
       transform: [
-        { translateY: translateY.value },
+        { translateY: translateY.value + finalTranslateY },
         { scale },
       ],
     };
