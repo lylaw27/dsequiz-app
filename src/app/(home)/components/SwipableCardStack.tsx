@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -58,8 +58,8 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
       if (finished) {
         runOnJS(handleSwipe)('down');
         // Small delay to let React update the currentIndex before resetting
-        translateY.value = withTiming(0, { duration: 0 });
-        bottomCardProgress.value = withTiming(0, { duration: 0 });
+        translateY.value = withTiming(0, { duration: 2 });
+        bottomCardProgress.value = withTiming(0, { duration: 2 });
       }
     });
   }, [handleSwipe, translateY, bottomCardProgress]);
@@ -245,6 +245,16 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
     return {
       position: 'absolute' as const,
       zIndex: 10 - index,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      overflow: 'hidden' as const,
+      borderRadius: 16,
     };
   };
 
@@ -268,7 +278,23 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
 
       {/* Top card (swipable) - highest z-index, front-most */}
       <GestureDetector gesture={panGesture}>
-        <Animated.View style={[{ zIndex: 100, width: '100%' }, animatedTopCardStyle]}>
+        <Animated.View style={[
+          { 
+            zIndex: 100, 
+            width: '100%',
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 4,
+            },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+            overflow: 'hidden',
+            borderRadius: 16,
+          }, 
+          animatedTopCardStyle
+        ]}>
           {renderCard(visibleCards[0].item, visibleCards[0].actualIndex)}
         </Animated.View>
       </GestureDetector>
