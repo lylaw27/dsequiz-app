@@ -13,7 +13,7 @@ import { SafeAreaView } from '../../components/safe-area-view';
 import { useAppTheme } from '../../contexts/app-theme-context';
 import { QuizCard, QuizData } from './components/QuizCard';
 import { SwipableCardStack } from './components/SwipableCardStack';
-import { mapMCQSetToQuizData, MCQSet } from './quizList';
+import { mapMCQSetToQuizData, MCQSet } from './types';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const StyledFeather = withUniwind(Feather);

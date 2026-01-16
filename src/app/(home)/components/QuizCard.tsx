@@ -4,8 +4,8 @@ import { Avatar, Card, cn } from 'heroui-native';
 import react from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
-  Easing,
-  FadeInDown,
+    Easing,
+    FadeInDown,
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
@@ -25,7 +25,10 @@ export type QuizData = {
   avatars: string[];
 };
 
-export type QuizCardProps = QuizData & { index: number };
+export type QuizCardProps = QuizData & { 
+  index: number;
+  isSubject?: boolean;
+};
 
 export const QuizCard: react.FC<QuizCardProps> = ({
   id,
@@ -37,16 +40,25 @@ export const QuizCard: react.FC<QuizCardProps> = ({
   peopleJoined,
   avatars,
   index,
+  isSubject = false,
 }) => {
   const { isDark } = useAppTheme();
   const router = useRouter();
+
+  const handlePress = () => {
+    if (isSubject) {
+      router.push(`/subjects/${id}`);
+    } else {
+      router.push(`/quiz/${id}`);
+    }
+  };
 
   return (
     <AnimatedPressable
       entering={FadeInDown.duration(300)
         .delay(index * 100)
         .easing(Easing.out(Easing.ease))}
-      onPress={() => router.push(`/quiz/${id}`)}
+      onPress={handlePress}
     >
       <Card
         className={cn(
@@ -74,7 +86,7 @@ export const QuizCard: react.FC<QuizCardProps> = ({
                 <View className="flex-1">
                   <Card.Title className="text-lg mb-1">{title}</Card.Title>
                   <AppText className="text-muted text-sm">
-                    {quizCount} 個題目
+                    {quizCount} 個{isSubject ? '題組' : '題目'}
                   </AppText>
                 </View>
               </View>

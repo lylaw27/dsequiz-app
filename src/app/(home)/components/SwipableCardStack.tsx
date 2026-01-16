@@ -32,7 +32,7 @@ export const SwipableCardStack: React.FC<SwipableCardStackProps> = ({
   const translateY = useSharedValue(0);
   const bottomCardProgress = useSharedValue(0);
   const startY = useSharedValue(0);
-  const offsetGap = 22;
+  const offsetGap = 25;
 
 
   const handleSwipe = useCallback((direction: 'up' | 'down') => {
