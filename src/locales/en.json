@@ -1,0 +1,90 @@
+{
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "error": "Error",
+    "completed": "Completed",
+    "people_completed": "people completed"
+  },
+  "navigation": {
+    "home": "Home",
+    "daily": "Daily Questions",
+    "mock": "Mock Exams",
+    "profile": "Profile"
+  },
+  "home": {
+    "good_morning": "Good Morning!",
+    "keep_going": "Keep up the great work 💪",
+    "today_progress": "Today's Progress",
+    "questions": "Questions",
+    "today_questions": "Today's Questions",
+    "view_all": "View All",
+    "loading_quizzes": "Loading quizzes...",
+    "error_loading": "Error Loading Quizzes",
+    "hot_quizzes": "Popular Quizzes",
+    "recommended": "Recommended for You",
+    "see_all": "See all",
+    "minutes": "mins",
+    "difficulty": "Difficulty",
+    "difficulty_level": "Difficulty 3~5",
+    "start_now": "Start Now",
+    "questions_count": "Questions",
+    "quiz_sets": "Quiz Sets"
+  },
+  "daily": {
+    "title": "Daily Questions",
+    "subtitle": "Choose a subject to start practicing",
+    "loading_subjects": "Loading subjects...",
+    "no_subjects": "No subjects available"
+  },
+  "subject_detail": {
+    "title": "Quiz List",
+    "refresh_note": "*Quizzes refresh daily at 00:00",
+    "loading_questions": "Loading questions...",
+    "loading_error": "Error loading questions",
+    "no_questions": "No questions available"
+  },
+  "completed_questions": {
+    "title": "Completed Questions",
+    "subtitle": "You have completed",
+    "quizzes": "quizzes",
+    "no_completed": "No completed questions yet",
+    "no_completed_subtitle": "Completed questions will appear here"
+  },
+  "mock": {
+    "title": "Mock Exams",
+    "coming_soon": "Coming soon..."
+  },
+  "profile": {
+    "title": "Profile",
+    "username": "Username",
+    "email": "user@example.com",
+    "sign_in": "Sign In",
+    "stats_title": "Learning Statistics",
+    "completed": "Completed",
+    "accuracy": "Accuracy",
+    "streak": "Day Streak",
+    "settings": "Settings",
+    "my_subjects": "My Subjects",
+    "subjects_selected": "{count} subjects selected",
+    "choose_subjects": "Choose your favorite subjects",
+    "dark_mode": "Dark Mode",
+    "light_mode": "Light Mode",
+    "language": "語言 / Language",
+    "follow_us": "Follow Us",
+    "sign_out": "Sign Out"
+  },
+  "avatar_modal": {
+    "title": "Choose Avatar",
+    "confirm": "Confirm Selection"
+  },
+  "subjects_modal": {
+    "title": "Choose Subjects",
+    "selected_count": "{count} subjects selected",
+    "confirm": "Confirm Selection"
+  }
+}

@@ -20,6 +20,7 @@ import {
 } from 'react-native-reanimated';
 import '../../global.css';
 import { AppThemeProvider } from '../contexts/app-theme-context';
+import { LanguageProvider } from '../contexts/language-context';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -47,15 +48,17 @@ function AppContent() {
 
   return (
     <AppThemeProvider>
-      <HeroUINativeProvider
-        config={{
-          toast: {
-            contentWrapper,
-          },
-        }}
-      >
-        <Slot />
-      </HeroUINativeProvider>
+      <LanguageProvider>
+        <HeroUINativeProvider
+          config={{
+            toast: {
+              contentWrapper,
+            },
+          }}
+        >
+          <Slot />
+        </HeroUINativeProvider>
+      </LanguageProvider>
     </AppThemeProvider>
   );
 }

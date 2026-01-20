@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
 import { Avatar, Card, cn } from 'heroui-native';
 import react from 'react';
 import { Pressable, View } from 'react-native';
@@ -28,6 +27,7 @@ export type QuizData = {
 export type QuizCardProps = QuizData & { 
   index: number;
   isSubject?: boolean;
+  onPress?: () => void;
 };
 
 export const QuizCard: react.FC<QuizCardProps> = ({
@@ -41,24 +41,16 @@ export const QuizCard: react.FC<QuizCardProps> = ({
   avatars,
   index,
   isSubject = false,
+  onPress,
 }) => {
   const { isDark } = useAppTheme();
-  const router = useRouter();
-
-  const handlePress = () => {
-    if (isSubject) {
-      router.push(`/subjects/${id}`);
-    } else {
-      router.push(`/quiz/${id}`);
-    }
-  };
 
   return (
     <AnimatedPressable
       entering={FadeInDown.duration(300)
         .delay(index * 100)
         .easing(Easing.out(Easing.ease))}
-      onPress={handlePress}
+      onPress={onPress}
     >
       <Card
         className={cn(

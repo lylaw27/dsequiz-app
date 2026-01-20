@@ -1,17 +1,19 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { View, Pressable } from 'react-native';
-import { withUniwind } from 'uniwind';
 import { cn } from 'heroui-native';
 import { AppText } from './app-text';
 import { useAppTheme } from '../contexts/app-theme-context';
+import { useLanguage } from '../contexts/language-context';
 import MaterialIcons from '@expo/vector-icons/build/MaterialIcons';
 
-const StyledIonicons = withUniwind(Ionicons);
+interface BottomNavigationProps {
+  activeTab: number;
+  onTabChange: (index: number) => void;
+}
 
-export const BottomNavigation: FC = () => {
+export const BottomNavigation: FC<BottomNavigationProps> = ({ activeTab, onTabChange }) => {
   const { isDark } = useAppTheme();
-  const [selectedTab, setSelectedTab] = useState<'home' | 'daily' | 'mock' | 'profile'>('daily');
+  const { t } = useLanguage();
 
   return (
     <View
@@ -20,37 +22,37 @@ export const BottomNavigation: FC = () => {
         isDark && 'border-zinc-800'
       )}
     >
-      <View className="flex-row items-center justify-around py-3 px-4">
-        <Pressable onPress={() => setSelectedTab('home')} className="items-center gap-1">
-          <View className={cn('py-2 px-4 rounded-full', selectedTab === 'home' && 'bg-accent')}>
-            <MaterialIcons name="home" size={24} color={selectedTab === 'home' ? '#FFFFFF' : '#666878'} />
+      <View className="flex-row items-center justify-around py-2 px-4">
+        <Pressable onPress={() => onTabChange(0)} className="items-center gap-1">
+          <View className={cn('py-1 px-4 rounded-full', activeTab === 0 && 'bg-accent')}>
+            <MaterialIcons name="home" size={24} color={activeTab === 0 ? '#FFFFFF' : '#666878'} />
           </View>
-          <AppText className={cn('text-xs', selectedTab === 'home' ? 'text-foreground/90' : 'text-muted')}>
-            主頁
+          <AppText className={cn('text-xs', activeTab === 0 ? 'text-foreground/90' : 'text-muted')}>
+            {t('navigation.home')}
           </AppText>
         </Pressable>
-        <Pressable onPress={() => setSelectedTab('daily')} className="items-center gap-1">
-          <View className={cn('py-2 px-4 rounded-full', selectedTab === 'daily' && 'bg-accent')}>
-            <MaterialIcons name="pending-actions" size={24} color={selectedTab === 'daily' ? '#FFFFFF' : '#666878'} />
+        <Pressable onPress={() => onTabChange(1)} className="items-center gap-1">
+          <View className={cn('py-1 px-4 rounded-full', activeTab === 1 && 'bg-accent')}>
+            <MaterialIcons name="pending-actions" size={24} color={activeTab === 1 ? '#FFFFFF' : '#666878'} />
           </View>
-          <AppText className={cn('text-xs', selectedTab === 'daily' ? 'text-foreground/90' : 'text-muted')}>
-            是日題目
+          <AppText className={cn('text-xs', activeTab === 1 ? 'text-foreground/90' : 'text-muted')}>
+            {t('navigation.daily')}
           </AppText>
         </Pressable>
-        <Pressable onPress={() => setSelectedTab('mock')} className="items-center gap-1">
-          <View className={cn('py-2 px-4 rounded-full', selectedTab === 'mock' && 'bg-accent')}>
-            <MaterialIcons name="alarm" size={24} color={selectedTab === 'mock' ? '#FFFFFF' : '#666878'} />
+        <Pressable onPress={() => onTabChange(2)} className="items-center gap-1">
+          <View className={cn('py-1 px-4 rounded-full', activeTab === 2 && 'bg-accent')}>
+            <MaterialIcons name="alarm" size={24} color={activeTab === 2 ? '#FFFFFF' : '#666878'} />
           </View>
-          <AppText className={cn('text-xs', selectedTab === 'mock' ? 'text-foreground/90' : 'text-muted')}>
-            模擬試題
+          <AppText className={cn('text-xs', activeTab === 2 ? 'text-foreground/90' : 'text-muted')}>
+            {t('navigation.mock')}
           </AppText>
         </Pressable>
-        <Pressable onPress={() => setSelectedTab('profile')} className="items-center gap-1">
-          <View className={cn('py-2 px-4 rounded-full', selectedTab === 'profile' && 'bg-accent')}>
-            <MaterialIcons name="person-outline" size={24} color={selectedTab === 'profile' ? '#FFFFFF' : '#666878'} />
+        <Pressable onPress={() => onTabChange(3)} className="items-center gap-1">
+          <View className={cn('py-1 px-4 rounded-full', activeTab === 3 && 'bg-accent')}>
+            <MaterialIcons name="person-outline" size={24} color={activeTab === 3 ? '#FFFFFF' : '#666878'} />
           </View>
-          <AppText className={cn('text-xs', selectedTab === 'profile' ? 'text-foreground/90' : 'text-muted')}>
-            個人設置
+          <AppText className={cn('text-xs', activeTab === 3 ? 'text-foreground/90' : 'text-muted')}>
+            {t('navigation.profile')}
           </AppText>
         </Pressable>
       </View>

@@ -24,7 +24,9 @@ type MCQ = {
   id: string;
   topic: string;
   question: string;
-  subject: string;
+  subject: {
+    name: string;
+  };
   options: Record<string, string>;
   correct_answer: string;
   explanation: string;
@@ -47,7 +49,9 @@ type MCQSetDetail = {
   id: string;
   topic: string;
   description: string | null;
-  subject: string;
+  subject: {
+    name: string;
+  };
   created_at: string | null;
   updated_at: string | null;
   mcqset_questions: MCQSetQuestion[];
@@ -280,7 +284,7 @@ export default function QuizDetailPage() {
         userAnswerText: userAnswer ? question.options[userAnswer] : '',
         correctAnswerText: question.options[question.correct_answer],
         isCorrect,
-        subject: question.subject,
+        subject: question.subject.name,
       };
     });
 
@@ -441,7 +445,7 @@ export default function QuizDetailPage() {
                           isDark && 'text-red-400'
                         )}
                       >
-                        {currentQuestion.subject}
+                        {currentQuestion.subject.name}
                       </Chip.Label>
                     </Chip>
                     {currentQuestion.question_types && (

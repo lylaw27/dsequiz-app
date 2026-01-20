@@ -1,0 +1,90 @@
+{
+  "common": {
+    "back": "返回",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "確認",
+    "retry": "重試",
+    "loading": "載入中...",
+    "error": "錯誤",
+    "completed": "已完成",
+    "people_completed": "人 已完成"
+  },
+  "navigation": {
+    "home": "主頁",
+    "daily": "是日題目",
+    "mock": "模擬試題",
+    "profile": "個人設置"
+  },
+  "home": {
+    "good_morning": "早晨！",
+    "keep_going": "今日都要加油呀💪",
+    "today_progress": "今日進度",
+    "questions": "題目",
+    "today_questions": "今日題目",
+    "view_all": "查看全部",
+    "loading_quizzes": "載入中...",
+    "error_loading": "Error Loading Quizzes",
+    "hot_quizzes": "熱門題庫",
+    "recommended": "為你推薦",
+    "see_all": "See all",
+    "minutes": "分鐘",
+    "difficulty": "難度",
+    "difficulty_level": "難度 3~5級",
+    "start_now": "Start Now",
+    "questions_count": "個題目",
+    "quiz_sets": "個題組"
+  },
+  "daily": {
+    "title": "是日題目",
+    "subtitle": "選擇科目開始練習",
+    "loading_subjects": "載入科目中...",
+    "no_subjects": "暫無科目"
+  },
+  "subject_detail": {
+    "title": "題目列表",
+    "refresh_note": "*題目將於 00:00 準時刷新",
+    "loading_questions": "正在載入題目...",
+    "loading_error": "載入題目時發生錯誤",
+    "no_questions": "暫沒題目"
+  },
+  "completed_questions": {
+    "title": "已完成題目",
+    "subtitle": "你已經完成了",
+    "quizzes": "個測驗",
+    "no_completed": "尚未完成任何題目",
+    "no_completed_subtitle": "完成題目後，它們將會顯示在這裡"
+  },
+  "mock": {
+    "title": "模擬試題",
+    "coming_soon": "即將推出..."
+  },
+  "profile": {
+    "title": "個人設置",
+    "username": "用戶名稱",
+    "email": "user@example.com",
+    "sign_in": "登入",
+    "stats_title": "學習統計",
+    "completed": "已完成",
+    "accuracy": "正確率",
+    "streak": "連續天數",
+    "settings": "設置",
+    "my_subjects": "我的科目",
+    "subjects_selected": "已選擇 {count} 個科目",
+    "choose_subjects": "選擇喜愛的科目",
+    "dark_mode": "深色模式",
+    "light_mode": "淺色模式",
+    "language": "語言 / Language",
+    "follow_us": "關注我們",
+    "sign_out": "登出"
+  },
+  "avatar_modal": {
+    "title": "選擇頭像",
+    "confirm": "確認選擇"
+  },
+  "subjects_modal": {
+    "title": "選擇科目",
+    "selected_count": "已選擇 {count} 個科目",
+    "confirm": "確認選擇"
+  }
+}
