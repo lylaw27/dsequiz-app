@@ -27,7 +27,7 @@ export const SafeAreaView: FC<PropsWithChildren<Props>> = ({
           ios: headerHeight,
           android: 0,
         }),
-        paddingBottom: insets.bottom + 32,
+        // paddingBottom: insets.bottom + 32,
       }}
       {...props}
     >

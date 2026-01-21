@@ -1,15 +1,15 @@
-import { View, Pressable, ScrollView, Linking, Alert } from 'react-native';
-import { AppText } from '../../../components/app-text';
-import { Avatar, Card, cn } from 'heroui-native';
-import { useState, useEffect } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Avatar, Card, cn } from 'heroui-native';
+import { useEffect, useState } from 'react';
+import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { AppText } from '../../../components/app-text';
+import { useAppTheme } from '../../../contexts/app-theme-context';
+import { useLanguage } from '../../../contexts/language-context';
+import { resetOnboardingForTesting } from '../../../helpers/utils/onboarding-utils';
 import { AvatarSelectionModal } from '../components/AvatarSelectionModal';
 import { SubjectsSelectionModal } from '../components/SubjectsSelectionModal';
 import { CompletedQuestionsScreen } from './CompletedQuestionsScreen';
-import { useAppTheme } from '../../../contexts/app-theme-context';
-import { useLanguage } from '../../../contexts/language-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { resetOnboardingForTesting } from '../../../helpers/utils/onboarding-utils';
 
 const AVATAR_STORAGE_KEY = '@user_avatar';
 const SUBJECTS_STORAGE_KEY = '@user_subjects';

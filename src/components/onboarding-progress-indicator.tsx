@@ -16,8 +16,8 @@ export function OnboardingProgressIndicator({
           key={index}
           className={`h-2 rounded-full ${
             index === currentStep
-              ? 'w-8 bg-primary'
-              : 'w-2 bg-default-300'
+              ? 'w-8 bg-accent'
+              : 'w-2 bg-accent/30'
           }`}
         />
       ))}

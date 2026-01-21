@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
 import { Button, Card } from 'heroui-native';
+import { Pressable, View } from 'react-native';
 import { AppText } from '../../../components/app-text';
 import { OnboardingProgressIndicator } from '../../../components/onboarding-progress-indicator';
 
@@ -21,9 +22,9 @@ export function WelcomeOnboardingScreen({
       </View>
 
       {/* Content */}
-      <View className="flex-1 items-center justify-center px-5">
+      <View className="flex-1 items-center justify-center">
         {/* Illustration */}
-        <View className="mb-12 h-96 w-full items-center justify-center">
+        <View className="h-[65%] w-full items-center justify-center px-5">
           <View className="relative h-full w-full items-center justify-center">
             {/* Diagonal Pink Band */}
             <View className="absolute h-32 w-full rotate-12 bg-pink-300 opacity-70" />
@@ -53,8 +54,8 @@ export function WelcomeOnboardingScreen({
         </View>
 
         {/* Text Content */}
-        <Card className="w-full">
-          <Card.Body className="p-8 items-center gap-4">
+        <Card className="w-full h-[35%] rounded-b-none">
+          <Card.Body className="p-4 items-center gap-4">
             <AppText className="text-center text-3xl font-bold">
               Welcome To Quizzo!
             </AppText>
@@ -64,7 +65,7 @@ export function WelcomeOnboardingScreen({
             </AppText>
 
             {/* Progress Indicator */}
-            <View className="mt-6">
+            <View className="mt-6 w-full flex-row items-center">
               <OnboardingProgressIndicator totalSteps={3} currentStep={0} />
             </View>
           </Card.Body>
@@ -74,11 +75,14 @@ export function WelcomeOnboardingScreen({
       {/* Next Button */}
       <View className="absolute bottom-12 right-5">
         <Button
-          size="lg"
+          size="sm"
           onPress={onNext}
-          className="h-20 w-20 rounded-full bg-accent"
+          className="h-17 w-17 rounded-full bg-accent"
         >
-          <Button.Label className="text-4xl text-white">→</Button.Label>
+          <Button.Label className="text-4xl text-white flex items-center justify-center">
+            {/* <FontAwesome5 name="arrow-right" size={30} color="white" /> */}
+            <Feather name="arrow-right" size={40} color="white" />
+          </Button.Label>
         </Button>
       </View>
     </View>
