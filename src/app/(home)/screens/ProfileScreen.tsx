@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Avatar, Card, cn } from 'heroui-native';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import { AppText } from '../../../components/app-text';
 import { useAppTheme } from '../../../contexts/app-theme-context';
 import { useLanguage } from '../../../contexts/language-context';
@@ -248,23 +248,55 @@ export function ProfileScreen() {
           {__DEV__ && (
             <Pressable 
               className="w-full py-3 rounded-xl border-2 border-orange-500 flex-row items-center justify-center gap-2"
-              onPress={async () => {
-                Alert.alert(
-                  'Reset Onboarding',
-                  'This will reset the onboarding flow. The app will reload.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { 
-                      text: 'Reset', 
-                      style: 'destructive',
-                      onPress: async () => {
-                        await resetOnboardingForTesting();
-                        // Reload the app - in Expo this will trigger the onboarding check
-                        Alert.alert('Success', 'Please restart the app to see the onboarding flow.');
+              onPress={() => {
+                console.log('Reset button pressed');
+                
+                if (Platform.OS === 'web') {
+                  // Web-specific confirmation
+                  const confirmed = window.confirm(
+                    'Reset Onboarding\n\nThis will clear all onboarding data and user preferences. You will need to restart the app.\n\nDo you want to continue?'
+                  );
+                  
+                  if (confirmed) {
+                    resetOnboardingForTesting().then((success) => {
+                      console.log('Reset result:', success);
+                      if (success) {
+                        window.alert(
+                          'Success\n\nAll onboarding data has been cleared. Please refresh the page to see the onboarding flow.'
+                        );
+                      } else {
+                        window.alert('Error\n\nFailed to reset onboarding data.');
                       }
-                    }
-                  ]
-                );
+                    });
+                  }
+                } else {
+                  // Native Alert for iOS/Android
+                  Alert.alert(
+                    'Reset Onboarding',
+                    'This will clear all onboarding data and user preferences. You will need to restart the app.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { 
+                        text: 'Reset', 
+                        style: 'destructive',
+                        onPress: async () => {
+                          console.log('Resetting onboarding...');
+                          const success = await resetOnboardingForTesting();
+                          console.log('Reset result:', success);
+                          if (success) {
+                            Alert.alert(
+                              'Success', 
+                              'All onboarding data has been cleared. Please close and restart the app to see the onboarding flow.',
+                              [{ text: 'OK' }]
+                            );
+                          } else {
+                            Alert.alert('Error', 'Failed to reset onboarding data.');
+                          }
+                        }
+                      }
+                    ]
+                  );
+                }
               }}
             >
               <Ionicons name="refresh-outline" size={20} color="#F97316" />

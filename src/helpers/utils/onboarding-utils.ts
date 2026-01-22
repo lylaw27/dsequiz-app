@@ -11,10 +11,14 @@ export async function resetOnboardingForTesting() {
       '@quizzo_selected_subjects',
       '@quizzo_auth_mode',
       '@quizzo_user_email',
+      '@user_avatar',
+      '@user_subjects',
     ]);
     console.log('Onboarding data cleared successfully');
+    return true;
   } catch (error) {
     console.error('Error resetting onboarding:', error);
+    return false;
   }
 }
 

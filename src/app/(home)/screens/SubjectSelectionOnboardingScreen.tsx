@@ -1,9 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card, Switch } from 'heroui-native';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Sortable from 'react-native-sortable';
+import Sortable from 'react-native-sortables';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
 import { OnboardingProgressIndicator } from '../../../components/onboarding-progress-indicator';
@@ -165,13 +165,13 @@ export function SubjectSelectionOnboardingScreen({
         </View>
 
         {/* Sortable Subject List */}
-        <Sortable onChangeOrder={handleReorder}>
+        <Sortable.Flex onChangeOrder={handleReorder}>
           {enabledSubjects.map((subject) => (
-            <View key={subject.id} sortableKey={subject.id}>
+            <View key={subject.id}>
               {renderSubjectCard(subject)}
             </View>
           ))}
-        </Sortable>
+        </Sortable.Flex>
 
         {/* Disabled Subjects */}
         {disabledSubjects.length > 0 && (
