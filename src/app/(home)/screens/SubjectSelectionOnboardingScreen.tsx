@@ -1,7 +1,8 @@
+import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button, Card, Switch } from 'heroui-native';
-import { useState } from 'react';
-import { Pressable, ScrollView, View, Text } from 'react-native';
+import { Button, Card } from 'heroui-native';
+import { useCallback, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Sortable from 'react-native-sortables';
 import { withUniwind } from 'uniwind';
@@ -38,40 +39,26 @@ export function SubjectSelectionOnboardingScreen({
   const { isDark } = useAppTheme();
   const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
 
-  const toggleSubjectEnabled = (subjectId: string) => {
-    setSubjects((prev) => {
-      const updated = prev.map((s) =>
-        s.id === subjectId ? { ...s, enabled: !s.enabled } : s
-      );
-      
-      // Sort: enabled subjects first (maintaining their order), disabled subjects last
-      const enabledSubjects = updated.filter((s) => s.enabled);
-      const disabledSubjects = updated.filter((s) => !s.enabled);
-      
-      return [...enabledSubjects, ...disabledSubjects].map((s, index) => ({
-        ...s,
-        order: index,
-      }));
-    });
+  const removeSubject = (subjectId: string) => {
+    setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
   };
 
-  const handleReorder = (nextOrder: string[]) => {
-    // Get disabled subjects
-    const disabledSubjects = subjects.filter((s) => !s.enabled);
-    
-    // Reorder enabled subjects based on nextOrder
-    const reorderedEnabled = nextOrder
-      .map(key => subjects.find(s => s.id === key && s.enabled))
-      .filter((s): s is Subject => s !== undefined);
-    
-    // Combine: enabled subjects in new order, then disabled subjects
-    const reordered = [...reorderedEnabled, ...disabledSubjects].map((s, index) => ({
-      ...s,
-      order: index,
-    }));
-    
-    setSubjects(reordered);
+  const resetSubjects = () => {
+    setSubjects(INITIAL_SUBJECTS);
   };
+
+  // const handleReorder = (nextOrder: string[]) => {
+  //   // Reorder subjects based on nextOrder
+  //   const reordered = nextOrder
+  //     .map(key => subjects.find(s => s.id === key))
+  //     .filter((s): s is Subject => s !== undefined)
+  //     .map((s, index) => ({
+  //       ...s,
+  //       order: index,
+  //     }));
+    
+  //   setSubjects(reordered);
+  // };
 
   const handleNext = () => {
     onNext(subjects);
@@ -79,20 +66,16 @@ export function SubjectSelectionOnboardingScreen({
 
   const renderSubjectCard = (item: Subject) => {
     return (
-      <Card
-        className={`mb-3 ${!item.enabled ? 'opacity-50' : ''}`}
-      >
+      <Card className="mb-3">
         <Card.Body className="flex-row items-center gap-4 p-4">
-          {/* Drag Handle - only for enabled subjects */}
-          {item.enabled && (
-            <View className="pr-2">
-              <StyledIonicons
-                name="menu"
-                size={24}
-                className="text-muted"
-              />
-            </View>
-          )}
+          {/* Drag Handle */}
+          <View className="pr-2">
+            <StyledIonicons
+              name="menu"
+              size={24}
+              className="text-muted"
+            />
+          </View>
           
           {/* Subject Icon */}
           <AppText className="text-4xl">{item.icon}</AppText>
@@ -100,26 +83,34 @@ export function SubjectSelectionOnboardingScreen({
           {/* Subject Name */}
           <View className="flex-1">
             <AppText className="text-lg font-semibold">{item.name}</AppText>
-            {item.enabled && (
-              <AppText className="text-xs text-muted">
-                Priority: #{subjects.filter(s => s.enabled).indexOf(item) + 1}
-              </AppText>
-            )}
+            <AppText className="text-xs text-muted">
+              Priority: #{subjects.indexOf(item) + 1}
+            </AppText>
           </View>
           
-          {/* Enable/Disable Toggle */}
-          <Switch
-            value={item.enabled}
-            onValueChange={() => toggleSubjectEnabled(item.id)}
-          />
+          {/* Remove Button */}
+          <Pressable
+            onPress={() => removeSubject(item.id)}
+            className="p-2 rounded-full bg-red-500/10"
+          >
+            <StyledIonicons
+              name="close"
+              size={20}
+              className="text-red-500"
+            />
+          </Pressable>
         </Card.Body>
       </Card>
     );
   };
 
-  const enabledCount = subjects.filter((s) => s.enabled).length;
-  const enabledSubjects = subjects.filter((s) => s.enabled);
-  const disabledSubjects = subjects.filter((s) => !s.enabled);
+  const subjectCount = subjects.length;
+  const renderItem = useCallback(({ item }: { item: Subject }) => (             
+    <View key={item.id}>
+      {renderSubjectCard(item)}
+    </View>),
+    [subjects]
+  );
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
@@ -140,61 +131,59 @@ export function SubjectSelectionOnboardingScreen({
             Drag to reorder by preference (strongest to weakest)
           </AppText>
           <AppText className="mt-1 text-center text-sm text-muted">
-            Toggle off subjects youre not learning
+            Remove subjects you don't need
           </AppText>
         </View>
 
-        {/* Info Card */}
-        <View className="mb-4 rounded-xl bg-primary/10 p-3">
-          <View className="flex-row items-center gap-2">
-            <StyledIonicons name="information-circle" size={20} className="text-primary" />
-            <AppText className="flex-1 text-sm text-primary">
-              Drag enabled subjects by the handle to reorder them
-            </AppText>
+        {/* Action Buttons Row */}
+        <View className="mb-4 flex-row items-center gap-3">
+          {/* Info Card */}
+          <View className="flex-1 rounded-xl bg-primary/10 p-3">
+            <View className="flex-row items-center gap-2">
+              <StyledIonicons name="information-circle" size={20} className="text-primary" />
+              <AppText className="flex-1 text-sm text-primary">
+                Drag cards to reorder
+              </AppText>
+            </View>
           </View>
+
+          {/* Reset Button */}
+          <Pressable
+            onPress={resetSubjects}
+            className="rounded-xl bg-surface p-3 border border-zinc-200"
+          >
+            <View className="flex-row items-center gap-2">
+              <StyledIonicons name="refresh" size={20} className="text-foreground" />
+              <AppText className="text-sm font-medium">Reset</AppText>
+            </View>
+          </Pressable>
         </View>
 
         {/* Subject Stats */}
-        <View className="mb-4 flex-row items-center justify-between rounded-xl bg-surface p-3">
-          <AppText className="text-sm font-medium">
-            Active Subjects: {enabledCount}
-          </AppText>
-          <AppText className="text-sm text-muted">
-            Disabled: {subjects.length - enabledCount}
+        <View className="mb-4 rounded-xl bg-surface p-3">
+          <AppText className="text-sm font-medium text-center">
+            {subjectCount} Subject{subjectCount !== 1 ? 's' : ''} Selected
           </AppText>
         </View>
 
         {/* Sortable Subject List */}
-        <Sortable.Flex onChangeOrder={handleReorder}>
-          {enabledSubjects.map((subject) => (
-            <View key={subject.id}>
-              {renderSubjectCard(subject)}
-            </View>
-          ))}
-        </Sortable.Flex>
+        <Sortable.Grid columns={1} 
+          // onChangeOrder={handleReorder} 
+          data={subjects}
+          renderItem={renderItem}
+          rowGap={10}
+          overDrag={'none'}
+          dragActivationDelay={0}
+        />
 
-        {/* Disabled Subjects */}
-        {disabledSubjects.length > 0 && (
-          <View className="mt-4">
-            <AppText className="mb-3 text-sm font-semibold text-muted">
-              Disabled Subjects
+        {/* Empty State */}
+        {subjectCount === 0 && (
+          <View className="items-center justify-center py-12">
+            <StyledIonicons name="school-outline" size={64} className="text-muted mb-4" />
+            <AppText className="text-lg font-semibold mb-2">No Subjects</AppText>
+            <AppText className="text-muted text-center mb-4">
+              You've removed all subjects. Tap reset to start over.
             </AppText>
-            {disabledSubjects.map((subject) => (
-              <Card key={subject.id} className="mb-3 opacity-50">
-                <Card.Body className="flex-row items-center gap-4 p-4">
-                  <AppText className="text-4xl">{subject.icon}</AppText>
-                  <View className="flex-1">
-                    <AppText className="text-lg font-semibold">
-                      {subject.name}
-                    </AppText>
-                  </View>
-                  <Switch
-                    value={subject.enabled}
-                    onValueChange={() => toggleSubjectEnabled(subject.id)}
-                  />
-                </Card.Body>
-              </Card>
-            ))}
           </View>
         )}
 
@@ -207,14 +196,14 @@ export function SubjectSelectionOnboardingScreen({
       {/* Next Button */}
       <View className="absolute bottom-12 right-5">
         <Button
-          size="lg"
-          onPress={handleNext}
-          isDisabled={enabledCount === 0}
-          className={`h-20 w-20 rounded-full ${
-            enabledCount === 0 ? 'bg-default-300' : 'bg-accent'
-          }`}
-        >
-          <Button.Label className="text-4xl text-white">→</Button.Label>
+            size="sm"
+            onPress={onNext}
+            className="h-17 w-17 rounded-full bg-accent"
+          >
+          <Button.Label className="text-4xl text-white flex items-center justify-center">
+            {/* <FontAwesome5 name="arrow-right" size={30} color="white" /> */}
+            <Feather name="arrow-right" size={40} color="white" />
+          </Button.Label>
         </Button>
       </View>
     </GestureHandlerRootView>
