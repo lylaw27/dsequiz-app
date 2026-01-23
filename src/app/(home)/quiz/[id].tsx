@@ -198,6 +198,9 @@ export default function QuizDetailPage() {
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [userAnswers, setUserAnswers] = useState<Map<number, string>>(new Map());
   const [isDrawingCanvasVisible, setIsDrawingCanvasVisible] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [quizStartTime, setQuizStartTime] = useState<number>(Date.now());
 
   useEffect(() => {
     if (id) {
@@ -219,11 +222,87 @@ export default function QuizDetailPage() {
       const result = await response.json();
       console.log('Fetched MCQ Set:', result);
       setMcqSet(result.data);
+      
+      // Create quiz session
+      await createQuizSession(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error fetching MCQ set:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createQuizSession = async (mcqSetData: MCQSetDetail) => {
+    try {
+      const startTime = Date.now();
+      setQuizStartTime(startTime);
+      setQuestionStartTime(startTime);
+
+      const response = await fetch(`${API_BASE_URL}/quiz-sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mcqset_id: mcqSetData.id,
+          total_questions: mcqSetData.mcqset_questions.length,
+          user_id: null, // Add user ID if you have authentication
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setSessionId(result.data.id);
+        console.log('Created session:', result.data.id);
+      }
+    } catch (err) {
+      console.error('Error creating quiz session:', err);
+    }
+  };
+
+  const submitAnswer = async (mcqId: string, answer: string) => {
+    if (!sessionId) return;
+
+    const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user-answers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          mcq_id: mcqId,
+          user_answer: answer,
+          time_spent: timeSpent,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('Answer submitted successfully');
+      }
+    } catch (err) {
+      console.error('Error submitting answer:', err);
+    }
+  };
+
+  const completeQuizSession = async () => {
+    if (!sessionId) return;
+
+    const totalTimeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/quiz-sessions/${sessionId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          time_spent: totalTimeSpent,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('Quiz session completed');
+      }
+    } catch (err) {
+      console.error('Error completing session:', err);
     }
   };
 
@@ -237,8 +316,8 @@ export default function QuizDetailPage() {
     return null;
   };
 
-  const handleNext = () => {
-    if (!mcqSet) return;
+  const handleNext = async () => {
+    if (!mcqSet || !currentQuestion) return;
 
     // First click: confirm answer and show result
     if (!isAnswerConfirmed) {
@@ -246,13 +325,16 @@ export default function QuizDetailPage() {
       setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex));
       if (selectedAnswer) {
         setUserAnswers(prev => new Map(prev).set(currentQuestionIndex, selectedAnswer));
+        // Submit answer to backend
+        await submitAnswer(currentQuestion.id, selectedAnswer);
       }
       return;
     }
 
     // Second click: find next uncompleted question (circular)
     if (allQuestionsCompleted) {
-      // All questions completed, navigate to summary
+      // Complete the session before navigating
+      await completeQuizSession();
       navigateToSummary();
       return;
     }
@@ -351,6 +433,7 @@ export default function QuizDetailPage() {
   
   const navigateToQuestion = (index: number) => {
     setCurrentQuestionIndex(index);
+    setQuestionStartTime(Date.now()); // Reset timer for new question
     const savedAnswer = userAnswers.get(index);
     if (savedAnswer) {
       setSelectedAnswer(savedAnswer);
