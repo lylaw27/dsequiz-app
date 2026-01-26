@@ -1,50 +1,99 @@
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card } from 'heroui-native';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Sortable from 'react-native-sortables';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
 import { OnboardingProgressIndicator } from '../../../components/onboarding-progress-indicator';
-import { useAppTheme } from '../../../contexts/app-theme-context';
 
 const StyledIonicons = withUniwind(Ionicons);
+
+// API Configuration
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface Subject {
   id: string;
   name: string;
-  icon: string;
+  eng_name?: string;
+  icon?: string;
   enabled: boolean;
   order: number;
+  description?: string;
+  image_url?: string;
 }
 
-const INITIAL_SUBJECTS: Subject[] = [
-  { id: '1', name: 'Mathematics', icon: '🔢', enabled: true, order: 0 },
-  { id: '2', name: 'Chinese', icon: '🇨🇳', enabled: true, order: 1 },
-  { id: '3', name: 'English', icon: '🇬🇧', enabled: true, order: 2 },
-  { id: '4', name: 'Science', icon: '🔬', enabled: true, order: 3 },
-  { id: '5', name: 'History', icon: '📜', enabled: true, order: 4 },
-  { id: '6', name: 'Geography', icon: '🌍', enabled: true, order: 5 },
-];
+// Icon mapping for subjects
+const SUBJECT_ICONS: Record<string, string> = {
+  'Mathematics': '🔢',
+  '數學': '🔢',
+  'Chinese': '🇨🇳',
+  'DSE中文12篇範文': '📚',
+  'English': '🇬🇧',
+  'Science': '🔬',
+  'History': '📜',
+  '中國歷史': '🏛️',
+  'Geography': '🌍',
+  'Chemistry': '⚗️',
+  '化學': '⚗️',
+  'BAFS': '💼',
+  '企業、會計與財務概論': '💼',
+};
 
 export function SubjectSelectionOnboardingScreen({
   onNext,
-  onSkip,
 }: {
   onNext: (subjects: Subject[]) => void;
-  onSkip: () => void;
 }) {
-  const { isDark } = useAppTheme();
-  const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch subjects from API
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/subjects`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch subjects');
+      }
+
+      const result = await response.json();
+      
+      // Transform API data to match our Subject interface
+      const transformedSubjects: Subject[] = result.data.map((subject: any, index: number) => ({
+        id: subject.id,
+        name: subject.name,
+        eng_name: subject.eng_name,
+        icon: SUBJECT_ICONS[subject.name] || SUBJECT_ICONS[subject.eng_name] || '📖',
+        enabled: true,
+        order: index,
+        description: subject.description,
+        image_url: subject.image_url,
+      }));
+
+      setSubjects(transformedSubjects);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      // Set empty array on error so UI can still show
+      setSubjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const removeSubject = (subjectId: string) => {
     setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
   };
 
   const resetSubjects = () => {
-    setSubjects(INITIAL_SUBJECTS);
+    fetchSubjects();
   };
 
   // const handleReorder = (nextOrder: string[]) => {
@@ -61,10 +110,11 @@ export function SubjectSelectionOnboardingScreen({
   // };
 
   const handleNext = () => {
+    // Just pass subjects to parent, don't save yet
     onNext(subjects);
   };
 
-  const renderSubjectCard = (item: Subject) => {
+  const renderSubjectCard = useCallback((item: Subject) => {
     return (
       <Card className="mb-3">
         <Card.Body className="flex-row items-center gap-4 p-4">
@@ -102,25 +152,30 @@ export function SubjectSelectionOnboardingScreen({
         </Card.Body>
       </Card>
     );
-  };
+  }, [subjects, removeSubject]);
 
   const subjectCount = subjects.length;
   const renderItem = useCallback(({ item }: { item: Subject }) => (             
     <View key={item.id}>
       {renderSubjectCard(item)}
     </View>),
-    [subjects]
+    [renderSubjectCard]
   );
+
+  // Show loading state
+  if (loading) {
+    return (
+      <GestureHandlerRootView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <AppText className="text-muted mt-4">Loading subjects...</AppText>
+        </View>
+      </GestureHandlerRootView>
+    );
+  }
 
   return (
     <GestureHandlerRootView className="flex-1 bg-background">
-      {/* Skip Button */}
-      <View className="absolute right-5 top-12 z-10">
-        <Pressable onPress={onSkip}>
-          <AppText className="text-base font-medium text-primary">Skip</AppText>
-        </Pressable>
-      </View>
-
       {/* Content */}
       <ScrollView className="flex-1 px-5 pt-20" contentContainerStyle={{ paddingBottom: 200 }}>
         <View className="mb-6">
@@ -131,7 +186,7 @@ export function SubjectSelectionOnboardingScreen({
             Drag to reorder by preference (strongest to weakest)
           </AppText>
           <AppText className="mt-1 text-center text-sm text-muted">
-            Remove subjects you don't need
+            Remove subjects you don&apos;t need
           </AppText>
         </View>
 
@@ -182,7 +237,7 @@ export function SubjectSelectionOnboardingScreen({
             <StyledIonicons name="school-outline" size={64} className="text-muted mb-4" />
             <AppText className="text-lg font-semibold mb-2">No Subjects</AppText>
             <AppText className="text-muted text-center mb-4">
-              You've removed all subjects. Tap reset to start over.
+              You&apos;ve removed all subjects. Tap reset to start over.
             </AppText>
           </View>
         )}
@@ -197,11 +252,11 @@ export function SubjectSelectionOnboardingScreen({
       <View className="absolute bottom-12 right-5">
         <Button
             size="sm"
-            onPress={onNext}
+            onPress={handleNext}
+            isDisabled={subjectCount === 0}
             className="h-17 w-17 rounded-full bg-accent"
           >
           <Button.Label className="text-4xl text-white flex items-center justify-center">
-            {/* <FontAwesome5 name="arrow-right" size={30} color="white" /> */}
             <Feather name="arrow-right" size={40} color="white" />
           </Button.Label>
         </Button>

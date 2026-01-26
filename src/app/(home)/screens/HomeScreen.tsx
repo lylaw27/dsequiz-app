@@ -68,6 +68,7 @@ export function HomeScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   const [quizzes, setQuizzes] = react.useState<any[]>([]);
+  const [unfinishedQuizzes, setUnfinishedQuizzes] = react.useState<any[]>([]);
   const [loading, setLoading] = react.useState(true);
   const [error, setError] = react.useState<string | null>(null);
 
@@ -98,9 +99,46 @@ export function HomeScreen() {
     }
   }, []);
 
+  const fetchUnfinishedSessions = react.useCallback(async () => {
+    try {
+      // TODO: Replace with actual user_id when auth is implemented
+      const userId = null;
+      const response = await fetch(`${API_BASE_URL}/quiz-sessions/unfinished/${userId || 'null'}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch unfinished sessions');
+      }
+
+      const result = await response.json();
+      const sessions = result.data || [];
+      
+      // Transform sessions to quiz card format
+      const mappedSessions = sessions.map((session: any) => ({
+        id: session.mcqset_id,
+        sessionId: session.id,
+        category: session.mcqset?.subject?.name || session.mcqset?.subject?.eng_name || 'Quiz',
+        title: session.mcqset?.topic || 'Untitled Quiz',
+        questionCount: session.mcqset?.count || 0,
+        answeredCount: session.answered_count || 0,
+        difficulty: 'Medium', // You can add difficulty to the database if needed
+        estimatedTime: '15 mins',
+        icon: 'document-text-outline',
+        progress: session.total_questions > 0 
+          ? Math.round((session.answered_count / session.total_questions) * 100)
+          : 0
+      }));
+      
+      setUnfinishedQuizzes(mappedSessions);
+    } catch (err) {
+      console.error('Error fetching unfinished sessions:', err);
+      // Don't set error state for unfinished sessions, just log it
+    }
+  }, []);
+
   react.useEffect(() => {
     fetchMCQSets();
-  }, [fetchMCQSets]);
+    fetchUnfinishedSessions();
+  }, [fetchMCQSets, fetchUnfinishedSessions]);
 
   if (loading) {
     return (
@@ -230,8 +268,50 @@ export function HomeScreen() {
           />
         </View>
 
+        {/* 繼續練習 Section - Only show if there are unfinished quizzes */}
+        {unfinishedQuizzes.length > 0 && (
+          <View className="px-5 bg-surface rounded-t-3xl py-5">
+            <View className="flex-row items-center justify-between mb-4">
+              <AppText className="text-2xl font-bold">繼續練習</AppText>
+              {unfinishedQuizzes.length > 1 && (
+                <Pressable onPress={() => router.push('/unfinished-quizzes')}>
+                  <AppText className="text-primary text-base font-medium">{t('home.see_all')}</AppText>
+                </Pressable>
+              )}
+            </View>
+
+            <View className="gap-4">
+              {/* Show only the latest unfinished quiz */}
+              {unfinishedQuizzes.slice(0, 1).map((quiz, index) => (
+                <View key={quiz.sessionId}>
+                  <QuizCard 
+                    {...quiz} 
+                    bgColor="bg-surface-foreground" 
+                    index={index}
+                    onPress={() => router.push(`/quiz/${quiz.id}?sessionId=${quiz.sessionId}`)}
+                  />
+                  {/* Progress indicator */}
+                  <View className="px-4 pb-2">
+                    <View className="flex-row items-center gap-2">
+                      <View className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                        <View 
+                          className="h-full bg-primary rounded-full" 
+                          style={{ width: `${quiz.progress}%` }}
+                        />
+                      </View>
+                      <AppText className="text-xs text-muted">
+                        {quiz.answeredCount}/{quiz.questionCount}
+                      </AppText>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* 為你推薦 Section */}
-        <View className="px-5 bg-surface rounded-t-3xl py-5">
+        <View className={`px-5 bg-surface py-5 ${unfinishedQuizzes.length === 0 ? 'rounded-t-3xl' : ''}`}>
           <View className="flex-row items-center justify-between mb-4">
             <AppText className="text-2xl font-bold">{t('home.recommended')}</AppText>
             <Pressable>

@@ -6,21 +6,12 @@ import { OnboardingProgressIndicator } from '../../../components/onboarding-prog
 
 export function WelcomeOnboardingScreen({
   onNext,
-  onSkip,
 }: {
   onNext: () => void;
-  onSkip: () => void;
 }) {
 
   return (
     <View className="flex-1 bg-background">
-      {/* Skip Button */}
-      <View className="absolute right-5 top-12 z-10">
-        <Pressable onPress={onSkip}>
-          <AppText className="text-base font-medium text-primary">Skip</AppText>
-        </Pressable>
-      </View>
-
       {/* Content */}
       <View className="flex-1 items-center justify-center">
         {/* Illustration */}

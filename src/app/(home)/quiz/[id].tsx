@@ -57,6 +57,24 @@ type MCQSetDetail = {
   mcqset_questions: MCQSetQuestion[];
 };
 
+type UserAnswer = {
+  mcq_id: string;
+  user_answer: string;
+  is_correct: boolean;
+  time_spent: number | null;
+  answered_at: string;
+};
+
+type QuizSession = {
+  id: string;
+  mcqset_id: string;
+  user_id: string | null;
+  total_questions: number;
+  started_at: string;
+  completed_at: string | null;
+  user_answers?: UserAnswer[];
+};
+
 type Answer = {
   id: string;
   label: string;
@@ -223,13 +241,87 @@ export default function QuizDetailPage() {
       console.log('Fetched MCQ Set:', result);
       setMcqSet(result.data);
       
-      // Create quiz session
-      await createQuizSession(result.data);
+      // Check for existing unfinished session
+      await loadOrCreateSession(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error fetching MCQ set:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOrCreateSession = async (mcqSetData: MCQSetDetail) => {
+    try {
+      // Check for existing unfinished session
+      const sessionResponse = await fetch(
+        `${API_BASE_URL}/quiz-sessions/mcqset/${mcqSetData.id}/null`
+      );
+      
+      if (sessionResponse.ok) {
+        const sessionResult = await sessionResponse.json();
+        const existingSession: QuizSession | null = sessionResult.data;
+        
+        if (existingSession) {
+          // Restore existing session
+          console.log('Restoring existing session:', existingSession.id);
+          setSessionId(existingSession.id);
+          setQuizStartTime(new Date(existingSession.started_at).getTime());
+          setQuestionStartTime(Date.now());
+          
+          // Restore user answers and progress
+          if (existingSession.user_answers && existingSession.user_answers.length > 0) {
+            const newAnsweredQuestions = new Set<number>();
+            const newUserAnswers = new Map<number, string>();
+            
+            // Map MCQ IDs to question indices
+            existingSession.user_answers.forEach((answer) => {
+              const questionIndex = mcqSetData.mcqset_questions.findIndex(
+                (q) => q.mcqs.id === answer.mcq_id
+              );
+              
+              if (questionIndex !== -1) {
+                newAnsweredQuestions.add(questionIndex);
+                newUserAnswers.set(questionIndex, answer.user_answer);
+              }
+            });
+            
+            setAnsweredQuestions(newAnsweredQuestions);
+            setUserAnswers(newUserAnswers);
+            
+            // Navigate to first unanswered question or first question
+            const firstUnanswered = mcqSetData.mcqset_questions.findIndex(
+              (_, idx) => !newAnsweredQuestions.has(idx)
+            );
+            
+            if (firstUnanswered !== -1) {
+              setCurrentQuestionIndex(firstUnanswered);
+            } else {
+              // All questions answered, show first question
+              setCurrentQuestionIndex(0);
+              const savedAnswer = newUserAnswers.get(0);
+              if (savedAnswer) {
+                setSelectedAnswer(savedAnswer);
+                setIsAnswerConfirmed(true);
+              }
+            }
+            
+            console.log('Restored progress:', {
+              answeredQuestions: newAnsweredQuestions.size,
+              totalQuestions: mcqSetData.mcqset_questions.length,
+            });
+          }
+          
+          return;
+        }
+      }
+      
+      // No existing session found, create a new one
+      await createQuizSession(mcqSetData);
+    } catch (err) {
+      console.error('Error loading/creating session:', err);
+      // Fallback to creating new session
+      await createQuizSession(mcqSetData);
     }
   };
 

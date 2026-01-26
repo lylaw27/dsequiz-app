@@ -118,7 +118,7 @@ export const QuizCard: react.FC<QuizCardProps> = ({
 
             <View className="flex-row items-center gap-3">
               <View className="flex-row">
-                {avatars.map((avatar, idx) => (
+                {avatars ? avatars.map((avatar, idx) => (
                   <View
                     key={idx}
                     className="border-2 border-background rounded-full"
@@ -129,7 +129,7 @@ export const QuizCard: react.FC<QuizCardProps> = ({
                       <Avatar.Fallback />
                     </Avatar>
                   </View>
-                ))}
+                )):<></>}
               </View>
               <AppText className="text-muted text-sm">
                 +{peopleJoined}人 已完成
