@@ -1,13 +1,13 @@
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button, Card } from 'heroui-native';
+import { Button } from 'heroui-native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Sortable from 'react-native-sortables';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
 import { OnboardingProgressIndicator } from '../../../components/onboarding-progress-indicator';
+import { SortableSubjectsList } from '../components/SortableSubjectsList';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -88,79 +88,36 @@ export function SubjectSelectionOnboardingScreen({
     }
   };
 
-  const removeSubject = (subjectId: string) => {
-    setSubjects((prev) => prev.filter((s) => s.id !== subjectId));
-  };
+  const removeSubject = useCallback((subjectId: string) => {
+    setSubjects((prev) => prev.map(s => 
+      s.id === subjectId ? { ...s, enabled: false } : s
+    ));
+  }, []);
 
   const resetSubjects = () => {
     fetchSubjects();
   };
 
-  // const handleReorder = (nextOrder: string[]) => {
-  //   // Reorder subjects based on nextOrder
-  //   const reordered = nextOrder
-  //     .map(key => subjects.find(s => s.id === key))
-  //     .filter((s): s is Subject => s !== undefined)
-  //     .map((s, index) => ({
-  //       ...s,
-  //       order: index,
-  //     }));
+  const handleDragEnd = useCallback((params: { data: Subject[] }) => {
+    // Update the order of all subjects based on the new sorted data
+    const updatedSubjects = subjects.map(subject => {
+      const newIndex = params.data.findIndex(s => s.id === subject.id);
+      if (newIndex !== -1) {
+        return { ...subject, order: newIndex };
+      }
+      return subject;
+    });
     
-  //   setSubjects(reordered);
-  // };
+    setSubjects(updatedSubjects);
+  }, [subjects]);
 
   const handleNext = () => {
     // Just pass subjects to parent, don't save yet
     onNext(subjects);
   };
 
-  const renderSubjectCard = useCallback((item: Subject) => {
-    return (
-      <Card className="mb-3">
-        <Card.Body className="flex-row items-center gap-4 p-4">
-          {/* Drag Handle */}
-          <View className="pr-2">
-            <StyledIonicons
-              name="menu"
-              size={24}
-              className="text-muted"
-            />
-          </View>
-          
-          {/* Subject Icon */}
-          <AppText className="text-4xl">{item.icon}</AppText>
-          
-          {/* Subject Name */}
-          <View className="flex-1">
-            <AppText className="text-lg font-semibold">{item.name}</AppText>
-            <AppText className="text-xs text-muted">
-              Priority: #{subjects.indexOf(item) + 1}
-            </AppText>
-          </View>
-          
-          {/* Remove Button */}
-          <Pressable
-            onPress={() => removeSubject(item.id)}
-            className="p-2 rounded-full bg-red-500/10"
-          >
-            <StyledIonicons
-              name="close"
-              size={20}
-              className="text-red-500"
-            />
-          </Pressable>
-        </Card.Body>
-      </Card>
-    );
-  }, [subjects, removeSubject]);
-
-  const subjectCount = subjects.length;
-  const renderItem = useCallback(({ item }: { item: Subject }) => (             
-    <View key={item.id}>
-      {renderSubjectCard(item)}
-    </View>),
-    [renderSubjectCard]
-  );
+  const enabledSubjects = subjects.filter(s => s.enabled);
+  const subjectCount = enabledSubjects.length;
 
   // Show loading state
   if (loading) {
@@ -222,13 +179,10 @@ export function SubjectSelectionOnboardingScreen({
         </View>
 
         {/* Sortable Subject List */}
-        <Sortable.Grid columns={1} 
-          // onChangeOrder={handleReorder} 
-          data={subjects}
-          renderItem={renderItem}
-          rowGap={10}
-          overDrag={'none'}
-          dragActivationDelay={0}
+        <SortableSubjectsList
+          subjects={subjects}
+          onRemoveSubject={removeSubject}
+          onDragEnd={handleDragEnd}
         />
 
         {/* Empty State */}

@@ -6,13 +6,25 @@ import { Alert, Linking, Platform, Pressable, ScrollView, View } from 'react-nat
 import { AppText } from '../../../components/app-text';
 import { useAppTheme } from '../../../contexts/app-theme-context';
 import { useLanguage } from '../../../contexts/language-context';
+import { getStoredUserId } from '../../../helpers/utils/auth-storage';
 import { resetOnboardingForTesting } from '../../../helpers/utils/onboarding-utils';
 import { AvatarSelectionModal } from '../components/AvatarSelectionModal';
 import { SubjectsSelectionModal } from '../components/SubjectsSelectionModal';
 import { CompletedQuestionsScreen } from './CompletedQuestionsScreen';
 
 const AVATAR_STORAGE_KEY = '@user_avatar';
-const SUBJECTS_STORAGE_KEY = '@user_subjects';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
+interface Subject {
+  id: string;
+  name: string;
+  eng_name?: string;
+  icon?: string;
+  enabled: boolean;
+  order: number;
+  description?: string;
+  image_url?: string;
+}
 
 export function ProfileScreen() {
   const { isDark, toggleTheme } = useAppTheme();
@@ -22,23 +34,40 @@ export function ProfileScreen() {
   const [showSubjectsModal, setShowSubjectsModal] = useState(false);
   const [showCompletedQuestions, setShowCompletedQuestions] = useState(false);
   const [userAvatar, setUserAvatar] = useState('https://api.dicebear.com/7.x/avataaars/svg?seed=Felix');
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
   const [isSignedIn] = useState(false); // TODO: Implement actual auth
   const [userEmail] = useState('user@example.com'); // TODO: Get from auth
 
   useEffect(() => {
     loadUserPreferences();
+    fetchUserSubjects();
   }, []);
 
   const loadUserPreferences = async () => {
     try {
       const savedAvatar = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
       if (savedAvatar) setUserAvatar(savedAvatar);
-
-      const savedSubjects = await AsyncStorage.getItem(SUBJECTS_STORAGE_KEY);
-      if (savedSubjects) setSelectedSubjects(JSON.parse(savedSubjects));
     } catch (error) {
       console.error('Error loading preferences:', error);
+    }
+  };
+
+  const fetchUserSubjects = async () => {
+    try {
+      const userId = await getStoredUserId();
+      const response = await fetch(`${API_BASE_URL}/user-subject-preferences/${userId || 'null'}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch subjects');
+      }
+
+      const result = await response.json();
+      
+      // Filter only enabled subjects
+      const enabledSubjects = result.data.filter((s: Subject) => s.enabled);
+      setSelectedSubjects(enabledSubjects);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
     }
   };
 
@@ -52,14 +81,13 @@ export function ProfileScreen() {
     }
   };
 
-  const handleSubjectsSelect = async (subjectIds: string[]) => {
-    setSelectedSubjects(subjectIds);
-    try {
-      await AsyncStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(subjectIds));
-    } catch (error) {
-      console.error('Error saving subjects:', error);
-      // Still keep the subjects in state even if storage fails
-    }
+  const handleSubjectsSelect = async (subjects: Subject[]) => {
+    // Filter only enabled subjects for display
+    const enabledSubjects = subjects.filter(s => s.enabled);
+    setSelectedSubjects(enabledSubjects);
+    
+    // Refresh subjects from backend to ensure sync
+    await fetchUserSubjects();
   };
 
   const openSocialMedia = (url: string) => {

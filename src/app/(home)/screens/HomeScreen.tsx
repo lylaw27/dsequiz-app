@@ -1,15 +1,17 @@
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Avatar, Button, Card, Chip } from 'heroui-native';
 import react from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../../components/app-text';
 import { useLanguage } from '../../../contexts/language-context';
+import { getStoredUserId } from '../../../helpers/utils/auth-storage';
 import { QuizCard } from '../components/QuizCard';
 import { SwipableCardStack } from '../components/SwipableCardStack';
 import { mapMCQSetToQuizData, MCQSet } from '../types';
+import { QuizCardProgress } from '../components/QuizCardProgress';
 
 const StyledFeather = withUniwind(Feather);
 const StyledIonicons = withUniwind(Ionicons);
@@ -101,8 +103,7 @@ export function HomeScreen() {
 
   const fetchUnfinishedSessions = react.useCallback(async () => {
     try {
-      // TODO: Replace with actual user_id when auth is implemented
-      const userId = null;
+      const userId = await getStoredUserId();
       const response = await fetch(`${API_BASE_URL}/quiz-sessions/unfinished/${userId || 'null'}`);
       
       if (!response.ok) {
@@ -135,10 +136,12 @@ export function HomeScreen() {
     }
   }, []);
 
-  react.useEffect(() => {
-    fetchMCQSets();
-    fetchUnfinishedSessions();
-  }, [fetchMCQSets, fetchUnfinishedSessions]);
+  useFocusEffect(
+    react.useCallback(() => {
+      fetchMCQSets();
+      fetchUnfinishedSessions();
+    }, [fetchMCQSets, fetchUnfinishedSessions])
+  );
 
   if (loading) {
     return (
@@ -284,26 +287,12 @@ export function HomeScreen() {
               {/* Show only the latest unfinished quiz */}
               {unfinishedQuizzes.slice(0, 1).map((quiz, index) => (
                 <View key={quiz.sessionId}>
-                  <QuizCard 
-                    {...quiz} 
+                  <QuizCardProgress
+                    {...quiz}
                     bgColor="bg-surface-foreground" 
                     index={index}
                     onPress={() => router.push(`/quiz/${quiz.id}?sessionId=${quiz.sessionId}`)}
                   />
-                  {/* Progress indicator */}
-                  <View className="px-4 pb-2">
-                    <View className="flex-row items-center gap-2">
-                      <View className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                        <View 
-                          className="h-full bg-primary rounded-full" 
-                          style={{ width: `${quiz.progress}%` }}
-                        />
-                      </View>
-                      <AppText className="text-xs text-muted">
-                        {quiz.answeredCount}/{quiz.questionCount}
-                      </AppText>
-                    </View>
-                  </View>
                 </View>
               ))}
             </View>

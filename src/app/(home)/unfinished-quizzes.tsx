@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { AppText } from '../../components/app-text';
 import { useLanguage } from '../../contexts/language-context';
+import { getStoredUserId } from '../../helpers/utils/auth-storage';
 import { QuizCard } from './components/QuizCard';
 
 const StyledIonicons = withUniwind(Ionicons);
@@ -23,8 +24,7 @@ export default function UnfinishedQuizzesScreen() {
       setLoading(true);
       setError(null);
       
-      // TODO: Replace with actual user_id when auth is implemented
-      const userId = null;
+      const userId = await getStoredUserId();
       const response = await fetch(`${API_BASE_URL}/quiz-sessions/unfinished/${userId || 'null'}`);
       
       if (!response.ok) {

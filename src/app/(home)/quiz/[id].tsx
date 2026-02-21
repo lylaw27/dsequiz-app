@@ -13,6 +13,7 @@ import { AppText } from '../../../components/app-text';
 import { SafeAreaView } from '../../../components/safe-area-view';
 import { DrawingCanvas } from '../../../components/drawing-canvas';
 import { useAppTheme } from '../../../contexts/app-theme-context';
+import { getStoredUserId } from '../../../helpers/utils/auth-storage';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const StyledFeather = withUniwind(Feather);
@@ -231,6 +232,8 @@ export default function QuizDetailPage() {
       setLoading(true);
       setError(null);
       
+      const storedUserId = await getStoredUserId();
+
       const response = await fetch(`${API_BASE_URL}/mcqsets/${id}`);
       
       if (!response.ok) {
@@ -242,7 +245,7 @@ export default function QuizDetailPage() {
       setMcqSet(result.data);
       
       // Check for existing unfinished session
-      await loadOrCreateSession(result.data);
+      await loadOrCreateSession(result.data, storedUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error fetching MCQ set:', err);
@@ -251,11 +254,14 @@ export default function QuizDetailPage() {
     }
   };
 
-  const loadOrCreateSession = async (mcqSetData: MCQSetDetail) => {
+  const loadOrCreateSession = async (
+    mcqSetData: MCQSetDetail,
+    storedUserId: string | null
+  ) => {
     try {
       // Check for existing unfinished session
       const sessionResponse = await fetch(
-        `${API_BASE_URL}/quiz-sessions/mcqset/${mcqSetData.id}/null`
+        `${API_BASE_URL}/quiz-sessions/mcqset/${mcqSetData.id}/${storedUserId || 'null'}`
       );
       
       if (sessionResponse.ok) {
@@ -317,15 +323,18 @@ export default function QuizDetailPage() {
       }
       
       // No existing session found, create a new one
-      await createQuizSession(mcqSetData);
+      await createQuizSession(mcqSetData, storedUserId);
     } catch (err) {
       console.error('Error loading/creating session:', err);
       // Fallback to creating new session
-      await createQuizSession(mcqSetData);
+      await createQuizSession(mcqSetData, storedUserId);
     }
   };
 
-  const createQuizSession = async (mcqSetData: MCQSetDetail) => {
+  const createQuizSession = async (
+    mcqSetData: MCQSetDetail,
+    storedUserId: string | null
+  ) => {
     try {
       const startTime = Date.now();
       setQuizStartTime(startTime);
@@ -337,7 +346,7 @@ export default function QuizDetailPage() {
         body: JSON.stringify({
           mcqset_id: mcqSetData.id,
           total_questions: mcqSetData.mcqset_questions.length,
-          user_id: null, // Add user ID if you have authentication
+          user_id: storedUserId,
         }),
       });
 
